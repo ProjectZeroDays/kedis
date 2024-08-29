@@ -5,6 +5,7 @@ import Parser from "./utils/parser";
 import path from "path";
 import fs from "fs";
 import { commands } from "./utils/commands";
+import getBytes from "./utils/get-bytes";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -87,7 +88,7 @@ export default class DBStore {
         const func = commands[command];
         if (func) {
           func(socket, params, this, data);
-          this.offset += data.length;
+          this.offset += getBytes(data.toString());
         }
       }
 

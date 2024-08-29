@@ -3,6 +3,7 @@ import { commands } from "./utils/commands";
 import Parser from "./utils/parser";
 import DBStore from "./db-store";
 import readConfig from "./utils/read-config";
+import getBytes from "./utils/get-bytes";
 
 const config = readConfig();
 
@@ -26,7 +27,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     if (!func) return;
 
     func(connection, params, store, data);
-    store.offset += data.length;
+    store.offset += getBytes(data.toString());
   });
 });
 
