@@ -33,7 +33,7 @@ class Commands {
       return;
     }
 
-    c.write(`+${value}\r\n`);
+    c.write(Parser.stringResponse(value));
   }
 }
 
