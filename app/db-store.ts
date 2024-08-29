@@ -25,7 +25,7 @@ export default class DBStore {
 
         if (!data) return null;
 
-        if (data.px && data.px < new Date()) {
+        if (data.px && data.px > new Date()) {
             delete this.data[key];
             return null;
         }

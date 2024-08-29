@@ -26,7 +26,6 @@ class RDBParser {
 
         try {
             this.data = fs.readFileSync(this.path);
-            console.log(this.data);
         } catch (error) {
             console.log(`error reading RDB file: ${this.path}`);
             console.log(error);
