@@ -69,8 +69,6 @@ export default class DBStore {
       if (step <= steps.length-1) {
         steps[step]();
         return;
-      } else {
-        socket.end();
       }
     });
 
