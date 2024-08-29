@@ -7,6 +7,8 @@ interface Config {
   dbfilename: string;
 }
 
+const emptyBase64 = "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
+
 export function loadRDB(config: Config) {
   if (config.dbfilename === "") {
     return {};
@@ -25,20 +27,27 @@ class RDBParser {
 
   constructor(path: string) {
     this.path = path;
-    console.log("Data is persistent to:", path);
 
     try {
       this.data = fs.readFileSync(this.path);
     } catch (error: any) {
-      console.error(`error reading RDB file: ${this.path}`);
       this.data = new Uint8Array();
 
       if (error.code === "ENOENT") {
-        console.error("RDB file not found");
-        return;
+        // write the base64 as bytes to the file
+        try {
+          // create the file first
+          fs.mkdirSync(path.split("/").slice(0, -1).join("/") , { recursive: true });
+          fs.writeFileSync(this.path, Buffer.from(emptyBase64, "base64"));
+        } catch (err) {
+          console.error("Can't persist data due to multiple errors");
+          console.error(`error reading RDB file: ${this.path}`, error);
+          console.error(`error creating new RDB file: ${this.path}`, err);
+          return;
+        }
       }
 
-      console.error(error);
+      console.log("Data is persistent to:", path);
       return;
     }
   }
