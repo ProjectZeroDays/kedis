@@ -76,6 +76,7 @@ export default class DBStore {
         if (contents) {
           fs.writeFileSync(file, contents);
           this.data = loadRDB(file);
+          console.log("Loaded file:", this.data);
           fs.unlinkSync(file);
         }
       }
@@ -88,7 +89,6 @@ export default class DBStore {
         for (const c of parsed) {
           const { command, params } = c!;
 
-          console.log(command);
           const func = commands[command];
           func(socket, params, this, data);
         }
@@ -143,7 +143,6 @@ export default class DBStore {
   }
 
   get(key: string) {
-    console.log(this.data);
     const data = this.data[key];
     const now = new Date();
 
