@@ -160,6 +160,12 @@ class RDBParser {
                         this.entries[key] = { value: zset, px: expiration, type: "string" };
                     }
                     break;
+                case 5: // int encoding
+                    const int = this.readUint32();
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value: int, px: expiration, type: "number" };
+                    }
+                    break;
                 default:
                     console.error("type not implemented: " + type);
 
