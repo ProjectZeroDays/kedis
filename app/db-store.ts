@@ -65,6 +65,7 @@ export default class DBStore {
     ];
 
     socket.on("data", (data: Buffer) => {
+      console.log("Message from master: ", data.toString());
       step += 1;
       if (step <= steps.length-1) {
         steps[step]();
