@@ -112,7 +112,7 @@ class RDBParser {
     }
 
     readEntries() {
-        const now = Date.now();
+        const now = new Date();
 
         while (this.index < this.data.length) {
             let type = this.data[this.index++];
@@ -133,13 +133,13 @@ class RDBParser {
                 case 0: // string encoding
                     const str = this.readEncodedString();
 
-                    if ((expiration ? expiration.getTime() : now) >= now) {
+                    if ((expiration ?? now) >= now) {
                         this.entries[key] = { value: str, px: expiration, type: "string" };
                     }
                     break;
                 case 12: // list encoding
                     const list = this.readEncodedString();
-                    if ((expiration ? expiration.getTime() : now) >= now) {
+                    if ((expiration ?? now) >= now) {
                         this.entries[key] = { value: list, px: expiration, type: "string" };
                     }
                     break;
