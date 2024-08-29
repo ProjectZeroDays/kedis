@@ -136,8 +136,7 @@ export default class DBStore {
       ? new Date(Date.now() + px)
       : undefined;
     const typedValue = !isNaN(parseInt(value)) ? Number(value) : value;
-    // const type = typeof typedValue === "string" ? "string" : "number";
-    const type = "string";
+    const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
     this.pushToReplicas(raw);
