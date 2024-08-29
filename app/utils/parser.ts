@@ -149,7 +149,6 @@ export default class Parser {
 
     if (command === "WAIT") {
       slicedParams.push([parseInt(params[1]), "WAIT"], [parseInt(params[3]), ""]);
-      console.log("WAIT COMMAND: ", slicedParams);
     }
 
     return {
