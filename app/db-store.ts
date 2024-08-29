@@ -67,7 +67,6 @@ export default class DBStore {
 
     socket.on("data", (data: Buffer) => {
       console.log("Message from master: ", data.toString());
-      step += 1;
       if (step <= steps.length - 1) {
         steps[step]();
       }
@@ -78,6 +77,8 @@ export default class DBStore {
         this.data = loadRDB("./" + file);
         fs.unlinkSync("./" + file);
       }
+
+      step += 1;
     });
 
     // start step
