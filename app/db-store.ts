@@ -80,9 +80,9 @@ export default class DBStore {
         loadedFile = true;
       }
 
-      const parsed = Parser.parseBatch(data);
+      const parsed = [Parser.parseBatch(data)];
 
-      for (const c of [parsed]) {
+      for (const c of parsed) {
         const { command, params, txt } = c!;
 
         const func = commands[command];
