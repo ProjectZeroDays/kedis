@@ -86,7 +86,7 @@ export default class DBStore {
   }
 
   pushToReplicas(raw: Buffer) {
-    console.log("Replicas:", this.replicas.length);
+    console.warn("Replicas:", this.replicas.length);
     this.replicas.forEach(r => r[1].write(raw));
   }
 
