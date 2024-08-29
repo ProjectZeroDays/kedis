@@ -31,7 +31,10 @@ export default class DBStore {
 
     const filePath = path.join(dir, dbfilename);
     this.path = filePath;
-    this.data = loadRDB(filePath);
+
+    if (role === "master") {
+      this.data = loadRDB(filePath);
+    }
 
     if (role === "slave" && master && masterId) {
       const [host, port] = master.split(" ");
@@ -83,6 +86,7 @@ export default class DBStore {
   }
 
   pushToReplicas(raw: Buffer) {
+    console.log("Replicas:", this.replicas.length);
     this.replicas.forEach(r => r[1].write(raw));
   }
 
@@ -98,7 +102,6 @@ export default class DBStore {
   }
 
   get(key: string) {
-    console.log(this.data);
     const data = this.data[key];
     const now = new Date();
 
