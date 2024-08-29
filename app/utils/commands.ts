@@ -54,6 +54,7 @@ class Commands {
     if (store.role === "master") {
       const msg = Parser.listResponse([raw.toString()]);
       msg.replace("set", "SET");
+      console.log("MSG", msg);
 
       store.pushToReplicas(msg);
       c.write(Parser.okResponse());
