@@ -7,7 +7,10 @@ console.log("Logs from your program will appear here!");
 const server: net.Server = net.createServer((connection: net.Socket) => {
   // Handle connection
 
-  connection.write("+PONG\r\n");
+  // we need to handle multiple ping requests (just send pong back):
+  connection.on("data", (_data: Buffer) => {
+    connection.write("+PONG\r\n");
+  });
 });
 
 server.listen(6379, "127.0.0.1");
