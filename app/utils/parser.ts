@@ -33,7 +33,7 @@ export default class Parser {
   }
 
   static parse(data: Buffer) {
-    const args = this.getArgs(data);
+    const args = Parser.getArgs(data);
     const slicedParams: [number, string][] = [];
     let tempLength = 0;
     let lastUnique: false | string = false;
@@ -46,7 +46,7 @@ export default class Parser {
         if (p.startsWith("$") && lastUnique) continue;
 
         if (p.startsWith("$") && !lastUnique) {
-          tempLength = this.readNumber(p);
+          tempLength = Parser.readNumber(p);
           lastUnique = false;
           continue;
         }
@@ -63,8 +63,8 @@ export default class Parser {
           continue;
         }
 
-        if ((lastUnique || "").toLowerCase() === "px" && !isNaN(this.readNumber(p))) {
-          slicedParams.push([this.readNumber(p), "--PX--"]);
+        if ((lastUnique || "").toLowerCase() === "px" && !isNaN(Parser.readNumber(p))) {
+          slicedParams.push([Parser.readNumber(p), "--PX--"]);
           lastUnique = false;
           continue;
         }

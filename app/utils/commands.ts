@@ -67,7 +67,9 @@ class Commands {
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
     const cmdType = args[0][1];
 
-    this.GET_CONFIG(c, args.slice(1), store);
+    if (Parser.matchInsensetive(cmdType, "get")) {
+      Commands.GET_CONFIG(c, args.slice(1), store);
+    }
   }
 }
 
