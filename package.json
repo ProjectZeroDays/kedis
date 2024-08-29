@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run app/main.ts",
-    "push": "git add . && git commit -m 'update' && git push"
+    "push": "git add . && git commit --allow-empty -m 'update' && git push"
   },
   "dependencies": {
     "async": "^3.2.0"
