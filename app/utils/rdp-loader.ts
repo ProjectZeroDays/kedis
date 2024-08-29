@@ -192,17 +192,14 @@ class RDBParser {
         }
         return length;
     }
-    readEncodedString(): string {
-        const length = this.readEncodedInt();
-        const str = bytesToString(this.data.slice(this.index, this.index + length));
-        this.index += length;
+
+    readEncodedString():string{
+        const length=this.readEncodedInt();
+        const str=bytesToString(this.data.slice(this.index,this.index+length));
+        this.index+=length;
         return str;
     }
 
-    readEncodedNumber(): number {
-        const str = this.readEncodedString();
-        return parseInt(str);
-    }
     getEntries(): Record<string, DBItem> {
         return this.entries;
     }
