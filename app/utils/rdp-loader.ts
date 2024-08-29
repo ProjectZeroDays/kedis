@@ -91,7 +91,29 @@ class RDBParser {
             }
         }
     }
+
+    readUint32(): number {
+        return (this.data[this.index++] + (this.data[this.index++] << 8) + (this.data[this.index++] << 16) + (this.data[this.index++] << 24))
+    }
+
+    readUnint64(): bigint {
+        let result = BigInt(0);
+        let shift = BigInt(0);
+
+        for (let i = 0; i < 8; i++) {
+
+            result += BigInt(this.data[this.index++]) << shift;
+
+            shift += BigInt(8);
+
+        }
+
+        return result;
+    }
+
     readEntries() {
+        const now = Date.now();
+
         while (this.index < this.data.length) {
             let type = this.data[this.index++];
             let expiration: Date | undefined;
@@ -101,14 +123,19 @@ class RDBParser {
             } else if (type === 0xFC) { // Expire time in milliseconds
                 expiration = new Date(this.readEncodedInt());
                 type = this.data[this.index++];
-            } else if (type === 0xFD) { // Expire time in seconds
-                expiration = new Date(this.readEncodedInt() * 1000);
+            } else if (type === 0xFD) { // Expire time in se
+                const seconds = this.readUint32();
+                expiration = new Date(Number(seconds) * 1000);
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
             switch (type) {
                 case 0: // string encoding
-                    this.entries[key] = { value: this.readEncodedString(), px: expiration, type: "string" };
+                    const value = this.readEncodedString();
+
+                    if ((expiration ? expiration.getTime() : now) >= now) {
+                        this.entries[key] = { value, px: expiration, type: "string" };
+                    }
                     break;
                 default:
                     throw Error("type not implemented: " + type);
