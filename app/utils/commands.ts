@@ -20,12 +20,15 @@ class Commands {
 
   static SET(c: net.Socket, args: [number, string][], store: DBStore) {
     const [key, value] = [args[0][1], args[1][1]];
-    store[key] = value;
+    let px: number | undefined = undefined;
 
-    console.log([key, value]);
-    console.log(store);
+    if (args[2] && args[2][1] == "--PX--") {
+      px = args[2][0];
+    }
 
-    c.write("+OK\r\n");
+    store[key] = {value, at: Date.now(), px};
+
+    c.write(Parser.okResponse());
   }
 
   static GET(c: net.Socket, args: [number, string][], store: DBStore) {
@@ -33,13 +36,17 @@ class Commands {
     const value = store[key];
 
     if (!value) {
-      c.write("$-1\r\n");
+      c.write(Parser.nilResponse());
       return;
     }
 
-    console.log(Parser.stringResponse(value));
+    if (typeof value.px === "number" && Date.now() - value.at > value.px) {
+      c.write(Parser.nilResponse());
+      store[key] = undefined;
+      return;
+    }
 
-    c.write(Parser.stringResponse(value));
+    c.write(Parser.stringResponse(value.value));
   }
 }
 

@@ -1,3 +1,9 @@
 type Command = "PING" | "ECHO" | "SET" | "GET";
 
-type DBStore = Record<string, string>;
+interface DBItem {
+    value: string;
+    px?: number;
+    at: number;
+}
+
+type DBStore = Record<string, DBItem | undefined>;
