@@ -90,7 +90,7 @@ export default class Parser {
     let lastUnique: false | string = false;
 
     const [numOfArgs, commandLength, cmd, ...params] = args;
-    const command = cmd as Command;
+    const command = cmd.toUpperCase() as Command;
 
     if (availableCommands.indexOf(command) === -1 && !commands[command])
       return undefined;
