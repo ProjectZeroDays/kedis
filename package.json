@@ -3,7 +3,8 @@
   "description": "Build your own Redis challenge, from CodeCrafters",
   "type": "module",
   "scripts": {
-    "dev": "bun run app/main.ts"
+    "dev": "bun run app/main.ts",
+    "push": "git add . && git commit -m 'update' && git push"
   },
   "dependencies": {
     "async": "^3.2.0"
