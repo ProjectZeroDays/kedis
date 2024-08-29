@@ -25,23 +25,29 @@ export default class Parser {
     const slicedParams: [number, string][] = [];
     let tempLength = 0;
     let lastP: string = "";
+    let lastUnique: false | string = false;
 
     const [numOfArgs, commandLength, command, ...params] = args;
 
     for (const p of params) {
-      if (p.startsWith("$")) {
-        tempLength = parseInt(p.substring(1));
-        continue;
-      }
+      tempLength = parseInt(p.substring(1));
 
-      if (tempLength !== 0) {
+      if (!lastUnique && slicedParams.length < 2) {
         slicedParams.push([tempLength, p]);
         tempLength = 0;
+        lastP = p;
+        lastUnique = false;
         continue;
       }
 
-      if (lastP.toLowerCase() === "px" && !isNaN(parseInt(p))) {
+      if (p.toLowerCase() === "px") {
+        lastUnique = p;
+        continue;
+      }
+
+      if ((lastUnique || "").toLowerCase() === "px" && !isNaN(parseInt(p.substring(1)))) {
         slicedParams.push([parseInt(p), "--PX--"]);
+        lastP = p;
         continue;
       }
 
