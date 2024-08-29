@@ -80,6 +80,8 @@ export default class DBStore {
         }
       }
 
+      step += 1;
+
       if (step >= steps.length) {
         const parsed = Parser.parseBatch(data);
 
@@ -91,8 +93,6 @@ export default class DBStore {
           func(socket, params, this, data);
         }
       }
-
-      step += 1;
 
       if (step <= steps.length - 1) {
         steps[step]();
