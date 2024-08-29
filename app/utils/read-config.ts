@@ -1,32 +1,35 @@
 export default function readConfig() {
-    const args = process.argv.slice(2);
-    const config = parseArgs(args);
+  const args = process.argv.slice(2);
+  const config = parseArgs(args);
 
-    return config;
+  return config;
 }
 
 function parseArgs(args: string[]) {
-    const config: Record<string, string> = {};
-    for (let i = 0; i < args.length; i += 2) {
-        const key = args[i];
-        const value = args[i + 1];
-        config[key.replace('--', '')] = value;
-    }
+  const config: Record<string, string> = {};
+  for (let i = 0; i < args.length; i += 2) {
+    const key = args[i];
+    const value = args[i + 1];
+    config[key.replace("--", "")] = value;
+  }
 
-    return validateConfig(config);
+  return validateConfig(config);
 }
 
 function validateConfig(args: Record<string, string>) {
-    let dir = args['dir'];
-    let dbfilename = args['dbfilename'];
-    let port = parseInt(args['port'] || '6379');
+  let dir = args["dir"];
+  let dbfilename = args["dbfilename"];
+  const port = parseInt(args["port"] || "6379");
+  const replicaof = args["replicaof"];
 
-    if (!dir || !dbfilename) {
-        // log that they're not defined and define a default one
-        dir = '/tmp';
-        dbfilename = 'db.rdb';
-        console.log(`dir or dbfilename not defined, falling back to default values: ${dir}, ${dbfilename}`)
-    }
+  if (!dir || !dbfilename) {
+    // log that they're not defined and define a default one
+    dir = "/tmp";
+    dbfilename = "db.rdb";
+    console.log(
+      `dir or dbfilename not defined, falling back to default values: ${dir}, ${dbfilename}`
+    );
+  }
 
-    return { dir, dbfilename, port };
+  return { dir, dbfilename, port, replicaof };
 }

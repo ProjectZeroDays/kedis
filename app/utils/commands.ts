@@ -9,7 +9,6 @@ type CommandFunc = (
 ) => void;
 
 class Commands {
-
   static PING(c: net.Socket) {
     c.write("+PONG\r\n");
   }
@@ -79,7 +78,7 @@ class Commands {
 
   static INFO(c: net.Socket, args: [number, string][], store: DBStore) {
     const res: string[] = [];
-    
+
     res.push("role:master");
     res.push(`master_replid:${store.id}`);
     res.push(`master_reploffset:${store.offset}`);

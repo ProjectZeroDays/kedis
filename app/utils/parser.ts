@@ -47,7 +47,7 @@ export default class Parser {
   }
 
   static matchInsensetive(str: string, target: string) {
-    return str.toLowerCase() === target.toLowerCase()
+    return str.toLowerCase() === target.toLowerCase();
   }
 
   static parse(data: Buffer) {
@@ -81,7 +81,10 @@ export default class Parser {
           continue;
         }
 
-        if ((lastUnique || "").toLowerCase() === "px" && !isNaN(Parser.readNumber(p))) {
+        if (
+          (lastUnique || "").toLowerCase() === "px" &&
+          !isNaN(Parser.readNumber(p))
+        ) {
           slicedParams.push([Parser.readNumber(p), "--PX--"]);
           lastUnique = false;
           continue;

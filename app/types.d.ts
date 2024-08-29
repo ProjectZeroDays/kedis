@@ -1,4 +1,4 @@
-type Command = "PING" | "ECHO" | "SET" | "GET" | "CONFIG" | "KEYS";
+type Command = "PING" | "ECHO" | "SET" | "GET" | "CONFIG" | "KEYS" | "INFO";
 
 interface DBItem {
     value: string | number;

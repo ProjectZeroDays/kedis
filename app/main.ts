@@ -5,7 +5,11 @@ import DBStore from "./db-store";
 import readConfig from "./utils/read-config";
 
 const config = readConfig();
-const store = new DBStore(config.dir, config.dbfilename);
+const store = new DBStore(
+  config.replicaof ? "slave" : "master",
+  config.dir,
+  config.dbfilename
+);
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (data: Buffer) => {
