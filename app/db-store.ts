@@ -72,6 +72,7 @@ export default class DBStore {
 
       const file = `/tmp/${Date.now()}.rdb`;
       const contents = Parser.readRdbFile(data);
+
       if (contents) {
         fs.writeFileSync(file, contents);
         this.data = loadRDB(file);
