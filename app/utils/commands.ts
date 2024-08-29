@@ -37,7 +37,12 @@ class Commands {
     c.write(value);
   }
 
-  static SET(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
+  static SET(
+    c: net.Socket,
+    args: [number, string][],
+    store: DBStore,
+    raw: Buffer
+  ) {
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
 
@@ -48,7 +53,10 @@ class Commands {
     store.set(raw, key, value, px);
     if (store.role === "master") {
       const [_a, _b, _c, ...params] = Parser.getArgs(raw);
-      const msg = Parser.listResponse(["SET", ...params.filter(p => !p.startsWith("$"))]);
+      const msg = Parser.listResponse([
+        "SET",
+        ...params.filter((p) => p.startsWith("$") === false),
+      ]);
       console.log("MSG", msg);
 
       store.pushToReplicas(msg);
@@ -87,7 +95,12 @@ class Commands {
     c.write(Parser.listResponse(res));
   }
 
-  static DEL(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
+  static DEL(
+    c: net.Socket,
+    args: [number, string][],
+    store: DBStore,
+    raw: Buffer
+  ) {
     const key = args[0][1];
     store.delete(raw, key);
     if (store.role === "master") c.write(Parser.okResponse());
