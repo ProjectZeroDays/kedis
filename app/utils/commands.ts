@@ -44,17 +44,30 @@ class Commands {
       return;
     }
 
-    if (typeof value.px === "number" && Date.now() - value.at > value.px) {
-      c.write(Parser.nilResponse());
-      store.delete(key);
-      return;
-    }
-
     c.write(Parser.stringResponse(value.value));
   }
 
+  static GET_CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
+    const res: string[] = [];
+
+    for (const a of args) {
+      if (Parser.matchInsensetive(a[1], "dir")) {
+        res.push(Parser.stringResponse(store.dir));
+        continue;
+      }
+
+      if (Parser.matchInsensetive(a[1], "dbfilename")) {
+        res.push(Parser.stringResponse(store.dbfilename));
+      }
+    }
+
+    c.write(res.join(""));
+  }
+
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
-    console.log(args);
+    const cmdType = args[0][1];
+
+    this.GET_CONFIG(c, args.slice(1), store);
   }
 }
 

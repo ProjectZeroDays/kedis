@@ -28,6 +28,10 @@ export default class Parser {
     return "$-1\r\n";
   }
 
+  static matchInsensetive(str: string, target: string) {
+    return str.toLowerCase() === target.toLowerCase()
+  }
+
   static parse(data: Buffer) {
     const args = this.getArgs(data);
     const slicedParams: [number, string][] = [];
@@ -69,7 +73,7 @@ export default class Parser {
 
     if (command === "CONFIG") {
       for (const p of params) {
-        if (p.startsWith("$") && lastUnique) continue;
+        if (p.startsWith("$")) continue;
 
         slicedParams.push([0, p]);
       }

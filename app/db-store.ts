@@ -13,7 +13,16 @@ export default class DBStore {
     }
 
     get(key: string) {
-        return this.data[key];
+        const data = this.data[key];
+
+        if (!data) return null;
+
+        if (typeof data.px === "number" && Date.now() - data.at > data.px) {
+            delete this.data[key];
+            return null;
+        }
+
+        return data;
     }
 
     delete(key: string) {
