@@ -25,10 +25,16 @@ class RDBParser {
         try {
             this.data = fs.readFileSync(this.path);
 
-        } catch (error) {
-            console.log(`error reading RDB file: ${this.path}`);
-            console.log(error);
+        } catch (error: any) {
             this.data = new Uint8Array();
+
+            if (error.code === "ENOENT") {
+                // create the file if it doesn't exist
+                fs.writeFileSync(this.path, "");
+            } else {
+                console.error(error);
+            }
+
             return;
         }
     }
