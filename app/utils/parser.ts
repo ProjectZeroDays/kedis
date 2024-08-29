@@ -1,3 +1,5 @@
+import fs from "fs";
+
 export default class Parser {
   static getArgs(data: Buffer) {
     const args = data.toString().split(`\r\n`);
@@ -18,6 +20,11 @@ export default class Parser {
 
   static simpleResponse(txt: string) {
     return `+${txt}\r\n`;
+  }
+
+  fileResponse(path: string) {
+    const contents = fs.readFileSync(path);
+    return `$${contents.length}\r\n${contents}`;
   }
 
   static numberResponse(num: number) {
