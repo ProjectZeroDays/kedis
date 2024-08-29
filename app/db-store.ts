@@ -39,13 +39,13 @@ export default class DBStore {
     }
 
     keys(regexString: string) {
-        const regex = new RegExp(regexString);
         const keys = Object.keys(this.data);
 
         if (regexString === "" || regexString === "*") {
             return keys;
         }
 
+        const regex = new RegExp(regexString);
         return keys.filter((key) => regex.test(key))
     }
 }
