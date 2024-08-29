@@ -5,7 +5,8 @@ import DBStore from "../db-store";
 type CommandFunc = (
   c: net.Socket,
   params: [number, string][],
-  store: DBStore
+  store: DBStore,
+  raw: Buffer
 ) => void;
 
 const EMPTY_RDB = Buffer.from(
@@ -23,7 +24,7 @@ class Commands {
     c.write(value);
   }
 
-  static SET(c: net.Socket, args: [number, string][], store: DBStore) {
+  static SET(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
 
@@ -31,7 +32,7 @@ class Commands {
       px = args[2][0];
     }
 
-    store.set(key, value, px);
+    store.set(raw, key, value, px);
     c.write(Parser.okResponse());
   }
 
@@ -66,6 +67,12 @@ class Commands {
     c.write(Parser.listResponse(res));
   }
 
+  static DEL(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
+    const key = args[0][1];
+    store.delete(raw, key);
+    c.write(Parser.okResponse());
+  }
+
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
     const cmdType = args[0][1];
 
@@ -81,7 +88,7 @@ class Commands {
     c.write(Parser.listResponse(keys));
   }
 
-  static INFO(c: net.Socket, args: [number, string][], store: DBStore) {
+  static INFO(c: net.Socket, _args: [number, string][], store: DBStore) {
     const res: string[] = [];
 
     res.push(`role:${store.role}`);
@@ -91,7 +98,7 @@ class Commands {
     c.write(Parser.stringResponse(res.join("\n")));
   }
 
-  static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
+  static REPLCONF(c: net.Socket) {
     c.write(Parser.okResponse());
   }
 
@@ -104,6 +111,8 @@ class Commands {
         EMPTY_RDB,
       ])
     );
+
+    store.addReplica(c);
   }
 }
 
@@ -112,6 +121,7 @@ export const commands: Record<Command, CommandFunc> = {
   ECHO: Commands.ECHO,
   SET: Commands.SET,
   GET: Commands.GET,
+  DEL: Commands.DEL,
   CONFIG: Commands.CONFIG,
   KEYS: Commands.KEYS,
   INFO: Commands.INFO,

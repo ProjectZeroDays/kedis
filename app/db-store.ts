@@ -2,7 +2,6 @@ import { loadRDB } from "./utils/rdp-loader";
 import * as net from "net";
 import * as crypto from "crypto";
 import Parser from "./utils/parser";
-import TCP from "./utils/tcp";
 import path from "path";
 
 export default class DBStore {
@@ -15,6 +14,7 @@ export default class DBStore {
   master?: { id: string; host: string; port: number };
   port: number;
   path: string;
+  replicas: [string, net.Socket][] = [];
 
   constructor(
     role: "master" | "slave",
@@ -41,7 +41,7 @@ export default class DBStore {
     if (this.role === "slave") this.connectMaster();
   }
 
-  connectMaster() {
+  private connectMaster() {
     const master = this.master!;
     const socket = new net.Socket();
     socket.connect(master.port, master.host);
@@ -73,7 +73,20 @@ export default class DBStore {
     steps[0]();
   }
 
-  set(key: string, value: string, px?: number) {
+  addReplica(c: net.Socket) {
+    const id = `${crypto.randomUUID()}`    
+    this.replicas.push([id, c]);
+
+    c.on("close", () => {
+      this.replicas = this.replicas.filter(r => r[0] !== id);
+    })
+  }
+
+  pushToReplicas(raw: Buffer) {
+    this.replicas.forEach(r => r[1].write(raw));
+  }
+
+  set(raw: Buffer, key: string, value: string, px: number | undefined = undefined) {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
       : undefined;
@@ -81,6 +94,7 @@ export default class DBStore {
     const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
+    this.pushToReplicas(raw);
   }
 
   get(key: string) {
@@ -98,8 +112,9 @@ export default class DBStore {
     return data;
   }
 
-  delete(key: string) {
+  delete(raw: Buffer, key: string) {
     delete this.data[key];
+    this.pushToReplicas(raw);
   }
 
   keys(regexString: string) {

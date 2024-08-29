@@ -5,6 +5,7 @@ import DBStore from "./db-store";
 import readConfig from "./utils/read-config";
 
 const config = readConfig();
+
 const store = new DBStore(
   config.replicaof ? "slave" : "master",
   config.port,
@@ -18,7 +19,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (data: Buffer) => {
     const { command, params } = Parser.parse(data);
     const func = commands[command];
-    func(connection, params, store);
+    func(connection, params, store, data);
   });
 });
 
