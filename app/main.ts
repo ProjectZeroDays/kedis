@@ -17,6 +17,8 @@ const store = new DBStore(
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (data: Buffer) => {
+    console.log("at", store.role);
+
     const parsed = Parser.parse(data);
     if (!parsed) return;
 
