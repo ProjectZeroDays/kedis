@@ -61,7 +61,7 @@ class Commands {
       }
 
       store.pushToReplicas(Parser.listResponse(replicasCommand));
-      c.write(Parser.okResponse());
+      // c.write(Parser.okResponse());
     }
   }
 
@@ -149,7 +149,7 @@ class Commands {
     }
 
     if (store.role === "master") {
-      // c.write(Parser.okResponse());
+      c.write(Parser.okResponse());
     }
   }
 
