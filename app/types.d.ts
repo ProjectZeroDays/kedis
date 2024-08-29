@@ -1,9 +1,7 @@
-type Command = "PING" | "ECHO" | "SET" | "GET";
+type Command = "PING" | "ECHO" | "SET" | "GET" | "CONFIG";
 
 interface DBItem {
     value: string;
     px?: number;
     at: number;
 }
-
-type DBStore = Record<string, DBItem | undefined>;

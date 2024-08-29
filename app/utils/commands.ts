@@ -1,5 +1,6 @@
 import * as net from "net";
 import Parser from "./parser";
+import DBStore from "../db-store";
 
 type CommandFunc = (
   c: net.Socket,
@@ -28,7 +29,7 @@ class Commands {
       px = args[2][0];
     }
 
-    store[key] = {value, at: Date.now(), px};
+    store.set(key, value, px);
     console.log(store);
 
     c.write(Parser.okResponse());
@@ -36,7 +37,7 @@ class Commands {
 
   static GET(c: net.Socket, args: [number, string][], store: DBStore) {
     const key = args[0][1];
-    const value = store[key];
+    const value = store.get(key);
 
     if (!value) {
       c.write(Parser.nilResponse());
@@ -45,11 +46,15 @@ class Commands {
 
     if (typeof value.px === "number" && Date.now() - value.at > value.px) {
       c.write(Parser.nilResponse());
-      store[key] = undefined;
+      store.delete(key);
       return;
     }
 
     c.write(Parser.stringResponse(value.value));
+  }
+
+  static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
+    console.log(args);
   }
 }
 
@@ -58,4 +63,5 @@ export const commands: Record<Command, CommandFunc> = {
   ECHO: Commands.ECHO,
   SET: Commands.SET,
   GET: Commands.GET,
+  CONFIG: Commands.CONFIG,
 };

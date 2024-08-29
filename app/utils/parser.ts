@@ -34,35 +34,45 @@ export default class Parser {
     let tempLength = 0;
     let lastUnique: false | string = false;
 
-    const [numOfArgs, commandLength, command, ...params] = args;
+    const [numOfArgs, commandLength, cmd, ...params] = args;
+    const command = cmd as Command;
 
-    for (const p of params) {
-      if (p.startsWith("$") && lastUnique) continue;
+    if (["GET", "SET", "ECHO", "PING"].includes(command)) {
+      for (const p of params) {
+        if (p.startsWith("$") && lastUnique) continue;
 
-      if (p.startsWith("$") && !lastUnique) {
-        tempLength = this.readNumber(p);
-        lastUnique = false;
-        continue;
+        if (p.startsWith("$") && !lastUnique) {
+          tempLength = this.readNumber(p);
+          lastUnique = false;
+          continue;
+        }
+
+        if (!lastUnique && slicedParams.length < 2 && tempLength > 0) {
+          slicedParams.push([tempLength, p]);
+          tempLength = 0;
+          lastUnique = false;
+          continue;
+        }
+
+        if (p.toLowerCase() === "px") {
+          lastUnique = p;
+          continue;
+        }
+
+        if ((lastUnique || "").toLowerCase() === "px" && !isNaN(this.readNumber(p))) {
+          slicedParams.push([this.readNumber(p), "--PX--"]);
+          lastUnique = false;
+          continue;
+        }
       }
+    }
 
-      if (!lastUnique && slicedParams.length < 2 && tempLength > 0) {
-        slicedParams.push([tempLength, p]);
-        tempLength = 0;
-        lastUnique = false;
-        continue;
+    if (command === "CONFIG") {
+      for (const p of params) {
+        if (p.startsWith("$") && lastUnique) continue;
+
+        slicedParams.push([0, p]);
       }
-
-      if (p.toLowerCase() === "px") {
-        lastUnique = p;
-        continue;
-      }
-
-      if ((lastUnique || "").toLowerCase() === "px" && !isNaN(this.readNumber(p))) {
-        slicedParams.push([this.readNumber(p), "--PX--"]);
-        lastUnique = false;
-        continue;
-      }
-
     }
 
     return {
