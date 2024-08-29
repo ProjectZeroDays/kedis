@@ -8,6 +8,11 @@ type CommandFunc = (
   store: DBStore
 ) => void;
 
+const EMPTY_RDB = Buffer.from(
+  "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2",
+  "hex"
+);
+
 class Commands {
   static PING(c: net.Socket) {
     c.write("+PONG\r\n");
@@ -93,7 +98,12 @@ class Commands {
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
     const [replid, offset] = [args[0][1], args[1][1]];
     c.write(Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
-    c.write(Parser.fileResponse(store.path));
+    c.write(
+      Buffer.concat([
+        Buffer.from(`$${EMPTY_RDB.length}\r\n`, "utf8"),
+        EMPTY_RDB,
+      ])
+    );
   }
 }
 
