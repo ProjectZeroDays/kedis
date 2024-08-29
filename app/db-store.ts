@@ -17,7 +17,7 @@ export default class DBStore {
   port: number;
   path: string;
   replicas: [string, net.Socket][] = [];
-  commands: string[] = [];
+  commands: Buffer[] = [];
 
   constructor(
     role: "master" | "slave",
@@ -68,6 +68,8 @@ export default class DBStore {
     ];
 
     socket.on("data", (data: Buffer) => {
+      console.log("Message from master: ", data.toString());
+
       if (step === steps.length - 1) {
         const file = `/tmp/${Date.now()}.rdb`;
         const contents = Parser.readRdbFile(data);
@@ -86,7 +88,7 @@ export default class DBStore {
         for (const c of parsed) {
           const { command, params } = c!;
 
-          console.log("command:", command);
+          console.log(command);
           const func = commands[command];
           func(socket, params, this, data);
         }
@@ -105,7 +107,7 @@ export default class DBStore {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
     this.commands.forEach((cmd) =>
-      c.write(cmd)
+      c.write(Parser.listResponse([cmd.toString()]))
     );
 
     c.on("close", () => {
@@ -113,10 +115,11 @@ export default class DBStore {
     });
   }
 
-  pushToReplicas(txt: string) {
+  pushToReplicas(raw: Buffer) {
+    const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach((r) => r[1].write(txt));
-    this.commands.push(txt);
+    this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
+    this.commands.push(raw);
   }
 
   updateReplica(c: net.Socket) {
@@ -136,6 +139,7 @@ export default class DBStore {
     const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
+    this.pushToReplicas(raw);
   }
 
   get(key: string) {
@@ -155,6 +159,7 @@ export default class DBStore {
 
   delete(raw: Buffer, key: string) {
     delete this.data[key];
+    this.pushToReplicas(raw);
   }
 
   keys(regexString: string) {
