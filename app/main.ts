@@ -27,7 +27,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     if (!func) return;
 
     func(connection, params, store, data);
-    store.offset += getBytes(data.toString());
+    // store.offset += getBytes(data);
   });
 });
 
