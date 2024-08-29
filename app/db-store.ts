@@ -86,8 +86,9 @@ export default class DBStore {
   }
 
   pushToReplicas(raw: Buffer) {
+    const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach(r => r[1].write(raw));
+    this.replicas.forEach(r => r[1].write(txt));
   }
 
   set(raw: Buffer, key: string, value: string, px: number | undefined = undefined) {
