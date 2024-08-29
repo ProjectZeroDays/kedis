@@ -149,6 +149,12 @@ class RDBParser {
                         this.entries[key] = { value: hash, px: expiration, type: "string" };
                     }
                     break;
+                case 10: // set encoding
+                    const set = this.readEncodedString();
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value: set, px: expiration, type: "string" };
+                    }
+                    break;
                 default:
                     console.error("type not implemented: " + type);
             }
