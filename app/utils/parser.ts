@@ -1,3 +1,5 @@
+import readCommand from "./read-command";
+
 export default class Parser {
 
     static getArgs(data: Buffer) {

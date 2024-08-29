@@ -1,6 +1,6 @@
 const availableComands: Command[] = ["PING", "ECHO"];
 
-function readCommand(args: string[]) {
+export default function readCommand(args: string[]) {
   const cmd = args[2].toUpperCase();
 
   if (!availableComands.includes(cmd as Command)) {
