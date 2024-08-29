@@ -88,6 +88,7 @@ export default class DBStore {
         const func = commands[command];
         if (func) {
           func(socket, params, this, data);
+          console.log("txt:", txt);
           this.offset += getBytes(txt);
         }
       }
