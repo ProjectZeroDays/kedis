@@ -33,6 +33,8 @@ class Commands {
       return;
     }
 
+    console.log(Parser.stringResponse(value));
+
     c.write(Parser.stringResponse(value));
   }
 }
