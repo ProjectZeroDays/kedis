@@ -68,7 +68,7 @@ export default class DBStore {
     ];
 
     socket.on("data", (data: Buffer) => {
-      console.log("Message from master");
+      console.log("Message from master: ", Parser.getArgs(data));
 
       const file = `/tmp/${Date.now()}.rdb`;
       const contents = Parser.readRdbFile(data);
