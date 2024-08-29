@@ -20,7 +20,13 @@ export default class Parser {
     return `:${num}\r\n`;
   }
 
-  static dynamicResponse(value: string | number) {
+  static dynamicResponse(value: string | number, typed: boolean = false) {
+    let symbol = "";
+
+    if (typed) {
+      symbol = typeof value === "string" ? "+" : ":";
+    }
+
     if (typeof value === "string") {
       return Parser.stringResponse(value);
     }
@@ -32,8 +38,10 @@ export default class Parser {
     return `-${txt}\r\n`;
   }
 
-  static listResponse(list: string[]) {
-    return `*${list.length}\r\n${list.join("")}`;
+  static listResponse(list: string[], typed: boolean = false) {
+    const values = list.map((l) => Parser.dynamicResponse(l, typed));
+
+    return `*${list.length}\r\n${values.join("")}`;
   }
 
   static okResponse() {
