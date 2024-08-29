@@ -79,7 +79,7 @@ class RDBParser {
               console.log(key, this.readEncodedInt());
               break;
             default:
-              throw Error("unknown auxiliary field");
+              throw Error("unknown auxiliary field: " + key);
           }
           break;
         }
