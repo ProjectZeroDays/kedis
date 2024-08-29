@@ -11,7 +11,7 @@ export default class DBStore {
   id: string = `${crypto.randomUUID()}`;
   offset: number = 0;
   role: "master" | "slave";
-  master?: { host: string; port: number };
+  master?: { id: string; host: string; port: number };
   port: number;
 
   constructor(
@@ -19,7 +19,8 @@ export default class DBStore {
     port: number,
     dir: string,
     dbfilename: string,
-    master: string
+    master: string,
+    masterId?: string,
   ) {
     this.role = role;
     this.dir = dir;
@@ -28,9 +29,9 @@ export default class DBStore {
 
     this.data = loadRDB({ dir, dbfilename });
 
-    if (role === "slave" && master) {
+    if (role === "slave" && master && masterId) {
       const [host, port] = master.split(" ");
-      this.master = { host, port: parseInt(port) };
+      this.master = { host, port: parseInt(port), id: masterId };
     }
 
     if (this.role === "slave") this.connectMaster();
@@ -53,11 +54,12 @@ export default class DBStore {
           ])
         ),
       () => socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"])),
+      () => socket.write(Parser.listResponse(["PSYNC", "?", "-1"])),
     ];
 
     socket.on("data", (data: Buffer) => {
       step += 1;
-      if (step <= 2) {
+      if (step <= steps.length-1) {
         steps[step]();
         return;
       }

@@ -10,7 +10,8 @@ const store = new DBStore(
   config.port,
   config.dir,
   config.dbfilename,
-  config.replicaof
+  config.replicaof,
+  config.replicaof ? config.replicaof.split(" ")[0] : undefined
 );
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
