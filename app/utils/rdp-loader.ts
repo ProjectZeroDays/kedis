@@ -121,8 +121,8 @@ class RDBParser {
                 this.index--;
                 break;
             } else if (type === 0xFC) { // Expire time in milliseconds
-                expiration = new Date(this.readEncodedInt());
-                type = this.data[this.index++];
+                const milliseconds=this.readUnint64();
+                expiration = new Date(Number(milliseconds));
             } else if (type === 0xFD) { // Expire time in se
                 const seconds = this.readUint32();
                 expiration = new Date(Number(seconds) * 1000);
