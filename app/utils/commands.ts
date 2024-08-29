@@ -78,7 +78,7 @@ class Commands {
     const regex = args[0][1];
     const keys = store.keys(regex);
 
-    c.write(Parser.listResponse(keys));
+    c.write(Parser.listResponse(keys, true));
   }
 }
 
