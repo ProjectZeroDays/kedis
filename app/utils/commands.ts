@@ -192,6 +192,7 @@ class Commands {
       }
 
       if (acks.length === neededRepls) {
+        if (passed) return;
         passed = true;
         store.replicas.forEach((r) => r[1].off("data", listener));
         c.write(Parser.numberResponse(neededRepls));
@@ -204,6 +205,9 @@ class Commands {
     });
 
     setTimeout(() => {
+      if (passed) return;
+
+      passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
       c.write(Parser.numberResponse(acks.length));
     }, timeout);
