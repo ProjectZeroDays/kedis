@@ -4,6 +4,7 @@ import * as crypto from "crypto";
 import Parser from "./utils/parser";
 import path from "path";
 import fs from "fs";
+import { commands } from "./utils/commands";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -74,6 +75,12 @@ export default class DBStore {
         fs.writeFileSync(file, data);
         this.data = loadRDB(file);
         fs.unlinkSync(file);
+      }
+
+      if (step >= steps.length) {
+        const { command, params } = Parser.parse(data);
+        const func = commands[command];
+        func(socket, params, this, data);
       }
 
       step += 1;
