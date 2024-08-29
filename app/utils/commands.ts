@@ -93,6 +93,7 @@ class Commands {
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
     const [replid, offset] = [args[0][1], args[1][1]];
     c.write(Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
+    c.write(Parser.fileResponse(store.path));
   }
 }
 

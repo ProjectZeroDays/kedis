@@ -9,11 +9,7 @@ interface Config {
 
 const emptyBase64 = "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
 
-export function loadRDB(config: Config) {
-  if (config.dbfilename === "") {
-    return {};
-  }
-  const filePath = path.join(config.dir, config.dbfilename);
+export function loadRDB(filePath: string) {
   const rdb = new RDBParser(filePath);
   rdb.parse();
   return rdb.getEntries();

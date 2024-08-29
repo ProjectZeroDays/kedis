@@ -22,7 +22,7 @@ export default class Parser {
     return `+${txt}\r\n`;
   }
 
-  fileResponse(path: string) {
+  static fileResponse(path: string) {
     const contents = fs.readFileSync(path);
     return `$${contents.length}\r\n${contents}`;
   }

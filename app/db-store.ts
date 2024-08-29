@@ -3,6 +3,7 @@ import * as net from "net";
 import * as crypto from "crypto";
 import Parser from "./utils/parser";
 import TCP from "./utils/tcp";
+import path from "path";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -13,6 +14,7 @@ export default class DBStore {
   role: "master" | "slave";
   master?: { id: string; host: string; port: number };
   port: number;
+  path: string;
 
   constructor(
     role: "master" | "slave",
@@ -27,7 +29,9 @@ export default class DBStore {
     this.dbfilename = dbfilename;
     this.port = port;
 
-    this.data = loadRDB({ dir, dbfilename });
+    const filePath = path.join(dir, dbfilename);
+    this.path = filePath;
+    this.data = loadRDB(filePath);
 
     if (role === "slave" && master && masterId) {
       const [host, port] = master.split(" ");
