@@ -42,10 +42,10 @@ export default class DBStore {
     await socket.connect(master.port, master.host);
 
     await socket.write(Parser.listResponse(["PING"]));
-    await socket.write(
-      Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()])
-    );
-    await socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
+    // await socket.write(
+    //   Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()])
+    // );
+    // await socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
   }
 
   set(key: string, value: string, px?: number) {
