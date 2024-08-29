@@ -24,13 +24,11 @@ export default class Parser {
     const args = this.getArgs(data);
     const slicedParams: [number, string][] = [];
     let tempLength = 0;
-    let lastP: string;
+    let lastPx: string = "";
 
     const [numOfArgs, commandLength, command, ...params] = args;
 
     for (const p of params) {
-      lastP = p;
-
       if (p.startsWith("$")) {
         tempLength = parseInt(p);
         continue;
@@ -39,10 +37,17 @@ export default class Parser {
       if (tempLength !== 0) {
         slicedParams.push([tempLength, p]);
         tempLength = 0;
+        continue;
       }
 
-      if (lastP.toLowerCase() === "px" && !isNaN(parseInt(p))) {
+      if (lastPx.toLowerCase() === "px" && !isNaN(parseInt(p))) {
         slicedParams.push([parseInt(p), "--PX--"]);
+        continue;
+      }
+
+      if (!isNaN(parseInt(p))) {
+        lastPx = p;
+        continue;
       }
     }
 
