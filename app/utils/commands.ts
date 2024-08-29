@@ -177,7 +177,7 @@ class Commands {
     const neededRepls = Math.min(store.replicas.length, repls);
 
     if (neededRepls === 0) {
-      return c.write(Parser.numberResponse(0));
+      return c.write(Parser.numberResponse(store.replicas.length));
     }
 
     let passed: boolean = false;
