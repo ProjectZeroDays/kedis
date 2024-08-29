@@ -36,13 +36,13 @@ export default class DBStore {
     if (this.role === "slave") this.connectMaster();
   }
 
-  connectMaster() {
+  async connectMaster() {
     const master = this.master!;
     const tcp = new TCP(master.port, master.host);
 
-    tcp.send(Parser.listResponse(["PING"]));
-    tcp.send(Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()]))
-    tcp.send(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
+    await tcp.send(Parser.listResponse(["PING"]));
+    await tcp.send(Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()]))
+    await tcp.send(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
   }
 
   set(key: string, value: string, px?: number) {

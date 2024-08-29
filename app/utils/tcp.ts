@@ -9,11 +9,11 @@ export default class TCP {
         this.host = host;
     }
 
-    send(msg: string) {
+    async send(msg: string) {
         const socket = new net.Socket();
-        socket.connect(this.port, this.host);
-        socket.write(msg);
-        socket.end();
+        await socket.connect(this.port, this.host);
+        await socket.write(msg);
+        await socket.end();
     }
 
 }
