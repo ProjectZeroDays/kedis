@@ -1,6 +1,7 @@
 import * as net from "net";
 import Parser from "./parser";
 import DBStore from "../db-store";
+import getBytes from "./get-bytes";
 
 type CommandFunc = (
   c: net.Socket,
@@ -129,6 +130,11 @@ class Commands {
 
     if (cmdType === "GETACK" && store.role === "slave") {
       c.write(Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
+
+      if (args.length < 3) {
+        store.offset += getBytes("*\r\n");
+      }
+
       return;
     }
 
