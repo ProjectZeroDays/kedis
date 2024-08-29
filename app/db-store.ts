@@ -36,16 +36,35 @@ export default class DBStore {
     if (this.role === "slave") this.connectMaster();
   }
 
-  async connectMaster() {
+  connectMaster() {
     const master = this.master!;
     const socket = new net.Socket();
-    await socket.connect(master.port, master.host);
+    socket.connect(master.port, master.host);
+    let step = 0;
 
-    await socket.write(Parser.listResponse(["PING"]));
-    // await socket.write(
-    //   Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()])
-    // );
-    // await socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
+    const steps = [
+      () => socket.write(Parser.listResponse(["PING"])),
+      () =>
+        socket.write(
+          Parser.listResponse([
+            "REPLCONF",
+            "listening-port",
+            this.port.toString(),
+          ])
+        ),
+      () => socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"])),
+    ];
+
+    socket.on("data", (data: Buffer) => {
+      step += 1;
+      if (step <= 2) {
+        steps[step - 1]();
+        return;
+      }
+    });
+
+    // start step
+    steps[0]();
   }
 
   set(key: string, value: string, px?: number) {
