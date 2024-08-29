@@ -44,7 +44,7 @@ class Commands {
       return;
     }
 
-    c.write(Parser.stringResponse(value.value));
+    c.write(Parser.dynamicResponse(value.value));
   }
 
   static GET_CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
@@ -63,8 +63,6 @@ class Commands {
       }
     }
 
-    console.log(res);
-
     c.write(Parser.listResponse(res));
   }
 
@@ -75,6 +73,13 @@ class Commands {
       Commands.GET_CONFIG(c, args.slice(1), store);
     }
   }
+
+  static KEYS(c: net.Socket, args: [number, string][], store: DBStore) {
+    const regex = args[0][1];
+    const keys = store.keys(regex);
+
+    c.write(Parser.listResponse(keys));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -83,4 +88,5 @@ export const commands: Record<Command, CommandFunc> = {
   SET: Commands.SET,
   GET: Commands.GET,
   CONFIG: Commands.CONFIG,
+  KEYS: Commands.KEYS
 };

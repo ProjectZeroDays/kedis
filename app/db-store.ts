@@ -1,3 +1,5 @@
+import { loadRDB } from "./utils/rdp-loader";
+
 export default class DBStore {
     data: Record<string, DBItem> = {};
     dir: string;
@@ -6,10 +8,17 @@ export default class DBStore {
     constructor(dir: string, dbfilename: string) {
         this.dir = dir;
         this.dbfilename = dbfilename;
+
+        this.data = loadRDB({ dir, dbfilename });
+        console.log(this.data);
     }
 
     set(key: string, value: string, px?: number) {
-        this.data[key] = { value, px, at: Date.now() };
+        const expiration: Date | undefined = px ? new Date(Date.now() + px) : undefined;
+        const typedValue = !isNaN(parseInt(value)) ? Number(value) : value;
+        const type = typeof typedValue === "string" ? "string" : "number";
+
+        this.data[key] = { value: typedValue, px: expiration, type };
     }
 
     get(key: string) {
@@ -17,7 +26,7 @@ export default class DBStore {
 
         if (!data) return null;
 
-        if (typeof data.px === "number" && Date.now() - data.at > data.px) {
+        if (data.px && data.px < new Date()) {
             delete this.data[key];
             return null;
         }
@@ -29,4 +38,14 @@ export default class DBStore {
         delete this.data[key];
     }
 
+    keys(regexString: string) {
+        const regex = new RegExp(regexString);
+        const keys = Object.keys(this.data);
+
+        if (regexString === "" || regexString === "*") {
+            return keys;
+        }
+
+        return keys.filter((key) => regex.test(key))
+    }
 }

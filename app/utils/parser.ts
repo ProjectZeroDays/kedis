@@ -16,6 +16,18 @@ export default class Parser {
     return `$${txt.length}\r\n${txt}\r\n`;
   }
 
+  static numberResponse(num: number) {
+    return `:${num}\r\n`;
+  }
+
+  static dynamicResponse(value: string | number) {
+    if (typeof value === "string") {
+      return Parser.stringResponse(value);
+    }
+
+    return Parser.numberResponse(value);
+  }
+
   static errorResponse(txt: string) {
     return `-${txt}\r\n`;
   }
@@ -75,7 +87,7 @@ export default class Parser {
       }
     }
 
-    if (command === "CONFIG") {
+    if (["CONFIG", "KEYS"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$")) continue;
 

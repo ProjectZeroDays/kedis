@@ -1,7 +1,7 @@
-type Command = "PING" | "ECHO" | "SET" | "GET" | "CONFIG";
+type Command = "PING" | "ECHO" | "SET" | "GET" | "CONFIG" | "KEYS";
 
 interface DBItem {
-    value: string;
-    px?: number;
-    at: number;
+    value: string | number;
+    px?: Date;
+    type: "string" | "number";
 }
