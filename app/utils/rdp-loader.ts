@@ -112,8 +112,7 @@ class RDBParser {
     }
 
     readEntries() {
-        const now = Date.now();
-
+        const now = new Date();
         while (this.index < this.data.length) {
             let type = this.data[this.index++];
             let expiration: Date | undefined;
@@ -121,19 +120,24 @@ class RDBParser {
                 this.index--;
                 break;
             } else if (type === 0xFC) { // Expire time in milliseconds
-                expiration = new Date(this.readEncodedInt());
+                const milliseconds = this.readUnint64();
+                expiration = new Date(Number(milliseconds));
                 type = this.data[this.index++];
-            } else if (type === 0xFD) { // Expire time in se
-                const seconds=this.readUint32();
+            } else if (type === 0xFD) { // Expire time in seconds
+                const seconds = this.readUint32();
                 expiration = new Date(Number(seconds) * 1000);
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
             switch (type) {
-                case 0: // string encoding
+                case 0: { // string encoding
                     const value = this.readEncodedString();
-                    this.entries[key] = { value, px: expiration, type: "string" };
+                    console.log(key, value, expiration);
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value, px: expiration, type: "string" };
+                    }
                     break;
+                }
                 default:
                     throw Error("type not implemented: " + type);
             }
