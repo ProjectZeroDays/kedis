@@ -72,14 +72,17 @@ export default class DBStore {
 
       if (step === steps.length - 1) {
         const file = `/tmp/${Date.now()}.rdb`;
-        fs.writeFileSync(file, data);
-        this.data = loadRDB(file);
-        fs.unlinkSync(file);
+        const contents = Parser.readRdbFile(data);
+        if (contents) {
+          fs.writeFileSync(file, contents);
+          this.data = loadRDB(file);
+          fs.unlinkSync(file);
+        }
       }
 
       if (step >= steps.length) {
         const parsed = Parser.parseBatch(data);
-        
+
         for (const c of parsed) {
           const { command, params } = c!;
 
@@ -87,7 +90,6 @@ export default class DBStore {
           const func = commands[command];
           func(socket, params, this, data);
         }
-
       }
 
       step += 1;
@@ -104,9 +106,9 @@ export default class DBStore {
   addReplica(c: net.Socket) {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
-    this.commands.forEach((cmd) => c.write(
-      Parser.listResponse([cmd.toString()])
-    ));
+    this.commands.forEach((cmd) =>
+      c.write(Parser.listResponse([cmd.toString()]))
+    );
 
     c.on("close", () => {
       this.replicas = this.replicas.filter((r) => r[0] !== id);

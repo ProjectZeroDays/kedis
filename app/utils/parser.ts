@@ -71,7 +71,16 @@ export default class Parser {
     const commands = txt.split(/\*/);
     return commands
       .filter((c) => c.length > 0)
-      .map((c) => Parser.parse(Buffer.from(c))).filter(c => c !== undefined);
+      .map((c) => Parser.parse(Buffer.from(c)))
+      .filter((c) => c !== undefined);
+  }
+
+  static readRdbFile(data: Buffer) {
+    const txt = data.toString();
+    const parts = txt.split(/\*/);
+    const wanted = parts.filter(p => p.startsWith("*") && p.includes("redis-ver"));
+
+    if (wanted.length > 0) return wanted[0];
   }
 
   static parse(data: Buffer) {
@@ -83,7 +92,8 @@ export default class Parser {
     const [numOfArgs, commandLength, cmd, ...params] = args;
     const command = cmd as Command;
 
-    if (availableCommands.indexOf(command) === -1 && !commands[command]) return undefined;
+    if (availableCommands.indexOf(command) === -1 && !commands[command])
+      return undefined;
 
     if (["GET", "SET", "ECHO", "PING"].includes(command)) {
       for (const p of params) {
