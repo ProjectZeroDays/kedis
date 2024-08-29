@@ -11,7 +11,7 @@ export default class DBStore {
   id: string = `${crypto.randomUUID()}`;
   offset: number = 0;
   role: "master" | "slave";
-  master?: {host: string; port: number};
+  master?: { host: string; port: number };
   port: number;
 
   constructor(
@@ -29,8 +29,8 @@ export default class DBStore {
     this.data = loadRDB({ dir, dbfilename });
 
     if (role === "slave" && master) {
-        const [host, port] = master.split(" ");
-        this.master = { host, port: parseInt(port) };
+      const [host, port] = master.split(" ");
+      this.master = { host, port: parseInt(port) };
     }
 
     if (this.role === "slave") this.connectMaster();
@@ -38,11 +38,14 @@ export default class DBStore {
 
   async connectMaster() {
     const master = this.master!;
-    const tcp = new TCP(master.port, master.host);
+    const socket = new net.Socket();
+    await socket.connect(master.port, master.host);
 
-    await tcp.send(Parser.listResponse(["PING"]));
-    await tcp.send(Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()]))
-    await tcp.send(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
+    await socket.write(Parser.listResponse(["PING"]));
+    await socket.write(
+      Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()])
+    );
+    await socket.write(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
   }
 
   set(key: string, value: string, px?: number) {
