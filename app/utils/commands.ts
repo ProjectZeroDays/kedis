@@ -46,7 +46,12 @@ class Commands {
     }
 
     store.set(raw, key, value, px);
-    if (store.role === "master") c.write(Parser.okResponse());
+    if (store.role === "master") {
+      const [_a, _b, _c, ...params] = Parser.getArgs(raw);
+
+      store.pushToReplicas(Parser.listResponse(["SET", ...params]));
+      c.write(Parser.okResponse());
+    }
   }
 
   static GET(c: net.Socket, args: [number, string][], store: DBStore) {

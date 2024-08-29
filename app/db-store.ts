@@ -17,7 +17,7 @@ export default class DBStore {
   port: number;
   path: string;
   replicas: [string, net.Socket][] = [];
-  commands: Buffer[] = [];
+  commands: string[] = [];
 
   constructor(
     role: "master" | "slave",
@@ -115,11 +115,10 @@ export default class DBStore {
     });
   }
 
-  pushToReplicas(raw: Buffer) {
-    const txt = raw.toString();
+  pushToReplicas(txt: string) {
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
-    this.commands.push(raw);
+    this.replicas.forEach((r) => r[1].write(txt));
+    this.commands.push(txt);
   }
 
   updateReplica(c: net.Socket) {
@@ -139,7 +138,6 @@ export default class DBStore {
     const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
-    this.pushToReplicas(raw);
   }
 
   get(key: string) {
@@ -159,7 +157,6 @@ export default class DBStore {
 
   delete(raw: Buffer, key: string) {
     delete this.data[key];
-    this.pushToReplicas(raw);
   }
 
   keys(regexString: string) {
