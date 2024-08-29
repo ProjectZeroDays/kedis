@@ -82,7 +82,7 @@ export default class DBStore {
 
       const parsed = Parser.parseBatch(data);
 
-      for (const c of parsed) {
+      for (const c of [parsed]) {
         const { command, params, txt } = c!;
 
         const func = commands[command];
