@@ -47,7 +47,12 @@ class Commands {
 
     store.set(raw, key, value, px);
     if (store.role === "master") {
-      store.pushToReplicas(Parser.listResponse(["SET", key, value]));
+      const replicasCommand = ["SET", key, value];
+      if (px) {
+        replicasCommand.push("px", px.toString());
+      }
+
+      store.pushToReplicas(Parser.listResponse(replicasCommand));
       c.write(Parser.okResponse());
     }
   }
