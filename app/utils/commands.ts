@@ -197,6 +197,9 @@ class Commands {
     };
 
     store.replicas.forEach((r) => r[1].on("data", listener));
+    store.replicas.forEach((r) =>
+      r[1].write(Parser.listResponse(["REPLCONF", "GETACK", "*"]))
+    );
 
     setTimeout(() => {
       store.replicas.forEach((r) => r[1].off("data", listener));
