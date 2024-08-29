@@ -1,4 +1,5 @@
 import fs from "fs";
+import { availableCommands, commands } from "./commands";
 
 export default class Parser {
   static getArgs(data: Buffer) {
@@ -65,6 +66,14 @@ export default class Parser {
     return str.toLowerCase() === target.toLowerCase();
   }
 
+  static parseBatch(data: Buffer) {
+    const txt = data.toString();
+    const commands = txt.split(/\*/);
+    return commands
+      .filter((c) => c.length > 0)
+      .map((c) => Parser.parse(Buffer.from(c))).filter(c => c !== undefined);
+  }
+
   static parse(data: Buffer) {
     const args = Parser.getArgs(data);
     const slicedParams: [number, string][] = [];
@@ -73,6 +82,8 @@ export default class Parser {
 
     const [numOfArgs, commandLength, cmd, ...params] = args;
     const command = cmd as Command;
+
+    if (availableCommands.indexOf(command) === -1 && !commands[command]) return undefined;
 
     if (["GET", "SET", "ECHO", "PING"].includes(command)) {
       for (const p of params) {

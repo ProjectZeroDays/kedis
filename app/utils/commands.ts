@@ -14,6 +14,19 @@ const EMPTY_RDB = Buffer.from(
   "hex"
 );
 
+export const availableCommands: Command[] = [
+  "PING",
+  "ECHO",
+  "SET",
+  "GET",
+  "DEL",
+  "CONFIG",
+  "KEYS",
+  "INFO",
+  "REPLCONF",
+  "PSYNC",
+];
+
 class Commands {
   static PING(c: net.Socket) {
     c.write("+PONG\r\n");

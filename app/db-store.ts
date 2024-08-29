@@ -1,6 +1,6 @@
 import { loadRDB } from "./utils/rdp-loader";
-import * as net from "net";
-import * as crypto from "crypto";
+import net from "net";
+import crypto from "crypto";
 import Parser from "./utils/parser";
 import path from "path";
 import fs from "fs";
@@ -78,10 +78,16 @@ export default class DBStore {
       }
 
       if (step >= steps.length) {
-        const { command, params } = Parser.parse(data);
-        console.log(command);
-        const func = commands[command];
-        func(socket, params, this, data);
+        const parsed = Parser.parseBatch(data);
+        
+        for (const c of parsed) {
+          const { command, params } = c!;
+
+          console.log(command);
+          const func = commands[command];
+          func(socket, params, this, data);
+        }
+
       }
 
       step += 1;
@@ -98,7 +104,9 @@ export default class DBStore {
   addReplica(c: net.Socket) {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
-    this.commands.forEach((cmd) => c.write(cmd));
+    this.commands.forEach((cmd) => c.write(
+      Parser.listResponse([cmd.toString()])
+    ));
 
     c.on("close", () => {
       this.replicas = this.replicas.filter((r) => r[0] !== id);
@@ -108,7 +116,7 @@ export default class DBStore {
   pushToReplicas(raw: Buffer) {
     const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach((r) => r[1].write(txt));
+    this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
     this.commands.push(raw);
   }
 
