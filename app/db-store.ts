@@ -19,6 +19,8 @@ export default class DBStore {
   path: string;
   replicas: [string, net.Socket][] = [];
   commands: Buffer[] = [];
+  locked: boolean = false;
+  replicationOffset: number = 0;
 
   constructor(
     role: "master" | "slave",

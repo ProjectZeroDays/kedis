@@ -40,7 +40,12 @@ class Commands {
     c.write(value);
   }
 
-  static SET(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
+  static SET(
+    c: net.Socket,
+    args: [number, string][],
+    store: DBStore,
+    raw: Buffer
+  ) {
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
 
@@ -91,7 +96,12 @@ class Commands {
     c.write(Parser.listResponse(res));
   }
 
-  static DEL(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
+  static DEL(
+    c: net.Socket,
+    args: [number, string][],
+    store: DBStore,
+    raw: Buffer
+  ) {
     const key = args[0][1];
     store.delete(raw, key);
     if (store.role === "master") {
@@ -156,9 +166,42 @@ class Commands {
 
   static WAIT(c: net.Socket, args: [number, string][], store: DBStore) {
     const [repls, timeout] = [args[0][0], args[1][0]];
-    
-    
-    c.write(Parser.numberResponse(store.replicas.length));
+
+    // get the minimum number between store.replicas.length and repls
+    const neededRepls = Math.min(store.replicas.length, repls);
+
+    if (neededRepls === 0) {
+      return c.write(Parser.numberResponse(0));
+    }
+
+    let passed: boolean = false;
+    const acks = [];
+    const listener = (data: Buffer) => {
+      const parsed = Parser.parse(data);
+      if (!parsed) return;
+
+      const { command, params } = parsed;
+
+      if (
+        Parser.matchInsensetive(command, "REPLCONF") &&
+        Parser.matchInsensetive(params[0][1], "ACK")
+      ) {
+        acks.push(1);
+      }
+
+      if (acks.length === neededRepls) {
+        passed = true;
+        store.replicas.forEach((r) => r[1].off("data", listener));
+        c.write(Parser.numberResponse(neededRepls));
+      }
+    };
+
+    store.replicas.forEach((r) => r[1].on("data", listener));
+
+    setTimeout(() => {
+      store.replicas.forEach((r) => r[1].off("data", listener));
+      c.write(Parser.numberResponse(acks.length));
+    }, timeout);
   }
 }
 
