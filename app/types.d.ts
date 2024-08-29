@@ -1,1 +1,1 @@
-type Command = "PING" | "ECHO"
+type Command = "PING" | "ECHO";
