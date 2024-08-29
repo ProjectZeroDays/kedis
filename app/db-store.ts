@@ -8,7 +8,7 @@ export default class DBStore {
   data: Record<string, DBItem> = {};
   dir: string;
   dbfilename: string;
-  id: string = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+  id: string = crypto.randomBytes(16).toString("hex");
   offset: number = 0;
   role: "master" | "slave";
   master?: { id: string; host: string; port: number };
