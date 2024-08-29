@@ -3,6 +3,7 @@ import * as net from "net";
 import * as crypto from "crypto";
 import Parser from "./utils/parser";
 import path from "path";
+import fs from "fs";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -22,7 +23,7 @@ export default class DBStore {
     dir: string,
     dbfilename: string,
     master: string,
-    masterId?: string,
+    masterId?: string
   ) {
     this.role = role;
     this.dir = dir;
@@ -67,9 +68,15 @@ export default class DBStore {
     socket.on("data", (data: Buffer) => {
       console.log("Message from master: ", data.toString());
       step += 1;
-      if (step <= steps.length-1) {
+      if (step <= steps.length - 1) {
         steps[step]();
-        return;
+      }
+
+      if (step === steps.length - 1) {
+        const file = `./${Date.now()}`;
+        fs.writeFileSync(file, data);
+        this.data = loadRDB("./" + file);
+        fs.unlinkSync("./" + file);
       }
     });
 
@@ -78,21 +85,26 @@ export default class DBStore {
   }
 
   addReplica(c: net.Socket) {
-    const id = `${crypto.randomUUID()}`    
+    const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
 
     c.on("close", () => {
-      this.replicas = this.replicas.filter(r => r[0] !== id);
-    })
+      this.replicas = this.replicas.filter((r) => r[0] !== id);
+    });
   }
 
   pushToReplicas(raw: Buffer) {
     const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach(r => r[1].write(txt));
+    this.replicas.forEach((r) => r[1].write(txt));
   }
 
-  set(raw: Buffer, key: string, value: string, px: number | undefined = undefined) {
+  set(
+    raw: Buffer,
+    key: string,
+    value: string,
+    px: number | undefined = undefined
+  ) {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
       : undefined;
