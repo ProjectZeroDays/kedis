@@ -52,14 +52,14 @@ class Commands {
 
     for (const a of args) {
       if (Parser.matchInsensetive(a[1], "dir")) {
-        res.push(Parser.stringResponse("dir"));
-        res.push(Parser.stringResponse(store.dir));
+        res.push("dir");
+        res.push(store.dir);
         continue;
       }
 
       if (Parser.matchInsensetive(a[1], "dbfilename")) {
-        res.push(Parser.stringResponse("dbfilename"));
-        res.push(Parser.stringResponse(store.dbfilename));
+        res.push("dbfilename");
+        res.push(store.dbfilename);
       }
     }
 
@@ -78,7 +78,7 @@ class Commands {
     const regex = args[0][1];
     const keys = store.keys(regex);
 
-    c.write(Parser.listResponse(keys, true));
+    c.write(Parser.listResponse(keys));
   }
 }
 
