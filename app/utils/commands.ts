@@ -81,7 +81,7 @@ class Commands {
 
     res.push(`role:${store.role}`);
     res.push(`master_replid:${store.id}`);
-    res.push(`master_reploffset:${store.offset}`);
+    res.push(`master_repl_offset:${store.offset}`);
 
     c.write(Parser.stringResponse(res.join("\n")));
   }
