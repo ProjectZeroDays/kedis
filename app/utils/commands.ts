@@ -215,7 +215,7 @@ class Commands {
 
       passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
-      c.write(Parser.numberResponse(store.replicas.length));
+      c.write(Parser.numberResponse(acks.length === 0 ? store.replicas.length : acks.length));
     }, timeout);
   }
 }
