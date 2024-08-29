@@ -28,8 +28,10 @@ export const availableCommands: Command[] = [
 ];
 
 class Commands {
-  static PING(c: net.Socket) {
-    c.write("+PONG\r\n");
+  static PING(c: net.Socket, _params: [number, string][], store: DBStore) {
+    if (store.role === "master") {
+      c.write(Parser.simpleResponse("PONG"));
+    }
   }
 
   static ECHO(c: net.Socket, params: [number, string][]) {
