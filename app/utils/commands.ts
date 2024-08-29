@@ -48,8 +48,10 @@ class Commands {
     store.set(raw, key, value, px);
     if (store.role === "master") {
       const [_a, _b, _c, ...params] = Parser.getArgs(raw);
+      const msg = Parser.listResponse(["SET", ...params])
+      console.log(msg);
 
-      store.pushToReplicas(Parser.listResponse(["SET", ...params]));
+      store.pushToReplicas(msg);
       c.write(Parser.okResponse());
     }
   }
