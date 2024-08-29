@@ -131,12 +131,20 @@ class RDBParser {
             const key = this.readEncodedString();
             switch (type) {
                 case 0: // string encoding
-                    const value = this.readEncodedString();
+                    const str = this.readEncodedString();
 
                     if ((expiration ? expiration.getTime() : now) >= now) {
-                        this.entries[key] = { value, px: expiration, type: "string" };
+                        this.entries[key] = { value: str, px: expiration, type: "string" };
                     }
                     break;
+                case 1:
+                    const num = this.readEncodedString();
+
+                    if ((expiration ? expiration.getTime() : now) >= now) {
+                        this.entries[key] = { value: num, px: expiration, type: "string" };
+                    }
+                    break;
+
                 default:
                     throw Error("type not implemented: " + type);
             }
@@ -185,6 +193,11 @@ class RDBParser {
         const str = bytesToString(this.data.slice(this.index, this.index + length));
         this.index += length;
         return str;
+    }
+
+    readEncodedNumber(): number {
+        const str = this.readEncodedString();
+        return parseInt(str);
     }
     getEntries(): Record<string, DBItem> {
         return this.entries;
