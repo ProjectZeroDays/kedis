@@ -13,10 +13,7 @@ export default class TCP {
     }
 
     send(msg: string) {
-        const socket = new net.Socket();
-        socket.connect(this.port, this.host);
-        socket.write(msg);
-        socket.end();
+        this.socket.write(msg);
     }
 
     close() {
