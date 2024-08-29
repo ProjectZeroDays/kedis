@@ -85,15 +85,16 @@ export default class DBStore {
         const { command, params } = c!;
 
         const func = commands[command];
-        func(socket, params, this, data);
+        if (func) {
+          func(socket, params, this, data);
+          this.offset += data.length;
+        }
       }
 
       step += 1;
       if (step <= steps.length - 1) {
         steps[step]();
       }
-      
-      this.offset += data.length;
     });
 
     // start step
