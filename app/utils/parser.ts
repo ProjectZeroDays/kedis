@@ -20,6 +20,10 @@ export default class Parser {
     return `-${txt}\r\n`;
   }
 
+  static listResponse(list: string[]) {
+    return `*${list.length}\r\n${list.join("")}`;
+  }
+
   static okResponse() {
     return "+OK\r\n";
   }
