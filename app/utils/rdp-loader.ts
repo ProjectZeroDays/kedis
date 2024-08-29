@@ -78,6 +78,9 @@ class RDBParser {
             case "aof-preamble":
               console.log(key, this.readEncodedInt());
               break;
+            case "aof-base":
+              console.log(key, this.readEncodedInt());
+              break;
             default:
               throw Error("unknown auxiliary field: " + key);
           }
