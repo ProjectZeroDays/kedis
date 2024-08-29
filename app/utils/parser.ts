@@ -87,6 +87,8 @@ export default class Parser {
       (p) => p.startsWith("*") && p.includes("redis-ver")
     );
 
+    console.log("wanted file: ", wanted);
+
     if (wanted.length > 0) return wanted[0];
   }
 

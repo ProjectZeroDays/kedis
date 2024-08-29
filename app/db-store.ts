@@ -113,7 +113,7 @@ export default class DBStore {
     });
   }
 
-  pushToReplicas(raw: Buffer) {
+  private pushToReplicas(raw: Buffer) {
     const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
     this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
@@ -156,7 +156,7 @@ export default class DBStore {
 
   delete(raw: Buffer, key: string) {
     delete this.data[key];
-    this.pushToReplicas(raw);
+    // this.pushToReplicas(raw);
   }
 
   keys(regexString: string) {
