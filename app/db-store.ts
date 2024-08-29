@@ -79,6 +79,7 @@ export default class DBStore {
 
       if (step >= steps.length) {
         const { command, params } = Parser.parse(data);
+        console.log(command);
         const func = commands[command];
         func(socket, params, this, data);
       }
