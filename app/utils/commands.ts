@@ -125,7 +125,7 @@ class Commands {
       ])
     );
 
-    // store.addReplica(c);
+    store.addReplica(c);
   }
 }
 
