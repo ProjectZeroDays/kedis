@@ -10,7 +10,6 @@ export default class DBStore {
         this.dbfilename = dbfilename;
 
         this.data = loadRDB({ dir, dbfilename });
-        console.log(this.data);
     }
 
     set(key: string, value: string, px?: number) {
