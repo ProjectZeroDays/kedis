@@ -173,8 +173,8 @@ class Commands {
     // get the minimum number between store.replicas.length and repls
     const neededRepls = Math.min(store.replicas.length, repls);
 
-    if (neededRepls === 0) {
-      return c.write(Parser.numberResponse(0));
+    if (true) {
+      return c.write(Parser.numberResponse(store.replicas.length));
     }
 
     let passed: boolean = false;
