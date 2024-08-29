@@ -153,6 +153,10 @@ class Commands {
 
     store.addReplica(c);
   }
+
+  static WAIT(c: net.Socket, args: [number, string][], store: DBStore) {
+
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -166,4 +170,5 @@ export const commands: Record<Command, CommandFunc> = {
   INFO: Commands.INFO,
   REPLCONF: Commands.REPLCONF,
   PSYNC: Commands.PSYNC,
+  WAIT: Commands.WAIT,
 };
