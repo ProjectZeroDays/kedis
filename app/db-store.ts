@@ -67,9 +67,6 @@ export default class DBStore {
 
     socket.on("data", (data: Buffer) => {
       console.log("Message from master: ", data.toString());
-      if (step <= steps.length - 1) {
-        steps[step]();
-      }
 
       if (step === steps.length - 1) {
         const file = `./${Date.now()}`;
@@ -79,6 +76,10 @@ export default class DBStore {
       }
 
       step += 1;
+
+      if (step <= steps.length - 1) {
+        steps[step]();
+      }
     });
 
     // start step
