@@ -65,7 +65,7 @@ class Commands {
 
     console.log(res);
 
-    c.write(`*${res.length}${res.join("")}`);
+    c.write(`*${Parser.stringResponse(`${res.length}`)}${res.join("")}`);
   }
 
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
