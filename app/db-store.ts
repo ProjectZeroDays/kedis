@@ -71,7 +71,7 @@ export default class DBStore {
       console.log("Message from master: ", data.toString());
 
       if (step === steps.length - 1) {
-        const file = `./${Date.now()}`;
+        const file = `/tmp/${Date.now()}.rdb`;
         fs.writeFileSync(file, data);
         this.data = loadRDB(file);
         fs.unlinkSync(file);
