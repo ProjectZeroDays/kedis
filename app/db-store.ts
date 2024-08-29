@@ -69,17 +69,14 @@ export default class DBStore {
 
     socket.on("data", (data: Buffer) => {
       console.log("Message from master");
-      step += 1;
 
-      if (step === steps.length - 1) {
-        const file = `/tmp/${Date.now()}.rdb`;
-        const contents = Parser.readRdbFile(data);
-        if (contents) {
-          fs.writeFileSync(file, contents);
-          this.data = loadRDB(file);
-          console.log("Loaded file:", this.data);
-          fs.unlinkSync(file);
-        }
+      const file = `/tmp/${Date.now()}.rdb`;
+      const contents = Parser.readRdbFile(data);
+      if (contents) {
+        fs.writeFileSync(file, contents);
+        this.data = loadRDB(file);
+        console.log("Loaded file:", this.data);
+        fs.unlinkSync(file);
       }
 
       if (step >= steps.length) {
@@ -93,6 +90,7 @@ export default class DBStore {
         }
       }
 
+      step += 1;
       if (step <= steps.length - 1) {
         steps[step]();
       }
