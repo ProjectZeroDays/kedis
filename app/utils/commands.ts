@@ -85,6 +85,10 @@ class Commands {
 
     c.write(Parser.stringResponse(res.join("\n")));
   }
+
+  static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
+    c.write(Parser.okResponse());
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -95,4 +99,5 @@ export const commands: Record<Command, CommandFunc> = {
   CONFIG: Commands.CONFIG,
   KEYS: Commands.KEYS,
   INFO: Commands.INFO,
+  REPLCONF: Commands.REPLCONF,
 };

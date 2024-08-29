@@ -7,6 +7,7 @@ import readConfig from "./utils/read-config";
 const config = readConfig();
 const store = new DBStore(
   config.replicaof ? "slave" : "master",
+  config.port,
   config.dir,
   config.dbfilename,
   config.replicaof

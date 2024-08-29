@@ -12,9 +12,11 @@ export default class DBStore {
   offset: number = 0;
   role: "master" | "slave";
   master?: {host: string; port: number};
+  port: number;
 
   constructor(
     role: "master" | "slave",
+    port: number,
     dir: string,
     dbfilename: string,
     master: string
@@ -22,6 +24,7 @@ export default class DBStore {
     this.role = role;
     this.dir = dir;
     this.dbfilename = dbfilename;
+    this.port = port;
 
     this.data = loadRDB({ dir, dbfilename });
 
@@ -38,6 +41,8 @@ export default class DBStore {
     const tcp = new TCP(master.port, master.host);
 
     tcp.send(Parser.listResponse(["PING"]));
+    tcp.send(Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()]))
+    tcp.send(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
 
     tcp.close();
   }
