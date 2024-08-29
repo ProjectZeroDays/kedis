@@ -52,18 +52,20 @@ class Commands {
 
     for (const a of args) {
       if (Parser.matchInsensetive(a[1], "dir")) {
+        res.push("dir");
         res.push(Parser.stringResponse(store.dir));
         continue;
       }
 
       if (Parser.matchInsensetive(a[1], "dbfilename")) {
+        res.push("dbfilename");
         res.push(Parser.stringResponse(store.dbfilename));
       }
     }
 
     console.log(res);
 
-    c.write(res.join(""));
+    c.write(`*${res.length}${res.join("")}`);
   }
 
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
