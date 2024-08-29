@@ -118,12 +118,12 @@ class Commands {
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
     const [replid, offset] = [args[0][1], args[1][1]];
     c.write(Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
-    // c.write(
-    //   Buffer.concat([
-    //     Buffer.from(`$${EMPTY_RDB.length}\r\n`, "utf8"),
-    //     EMPTY_RDB,
-    //   ])
-    // );
+    c.write(
+      Buffer.concat([
+        Buffer.from(`$${EMPTY_RDB.length}\r\n`, "utf8"),
+        EMPTY_RDB,
+      ])
+    );
 
     // store.addReplica(c);
   }
