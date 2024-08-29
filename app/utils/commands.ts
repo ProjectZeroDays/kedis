@@ -65,7 +65,7 @@ class Commands {
 
     console.log(res);
 
-    c.write(`*${res.length}\n\r${res.join("")}`);
+    c.write(`*${res.length}\r\n${res.join("")}`);
   }
 
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
