@@ -106,9 +106,9 @@ export default class DBStore {
   addReplica(c: net.Socket) {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
-    this.commands.forEach((cmd) =>
-      c.write(Parser.listResponse([cmd.toString()]))
-    );
+    // this.commands.forEach((cmd) =>
+    //   c.write(Parser.listResponse([cmd.toString()]))
+    // );
 
     c.on("close", () => {
       this.replicas = this.replicas.filter((r) => r[0] !== id);
@@ -139,7 +139,7 @@ export default class DBStore {
     const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
-    this.pushToReplicas(raw);
+    // this.pushToReplicas(raw);
   }
 
   get(key: string) {
