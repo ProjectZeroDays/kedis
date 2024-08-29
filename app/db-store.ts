@@ -69,6 +69,7 @@ export default class DBStore {
 
     socket.on("data", (data: Buffer) => {
       console.log("Message from master");
+      step += 1;
 
       if (step === steps.length - 1) {
         const file = `/tmp/${Date.now()}.rdb`;
@@ -80,8 +81,6 @@ export default class DBStore {
           fs.unlinkSync(file);
         }
       }
-
-      step += 1;
 
       if (step >= steps.length) {
         const parsed = Parser.parseBatch(data);
