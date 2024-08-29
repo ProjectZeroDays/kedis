@@ -37,6 +37,8 @@ export default class Parser {
     const [numOfArgs, commandLength, command, ...params] = args;
 
     for (const p of params) {
+      if (p.startsWith("$") && lastUnique) continue;
+
       if (p.startsWith("$") && !lastUnique) {
         tempLength = this.readNumber(p);
         lastUnique = false;
