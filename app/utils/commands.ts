@@ -19,7 +19,8 @@ class Commands {
   }
 
   static SET(c: net.Socket, args: string[], store: DBStore) {
-    const [key, value] = [args[3], args[5]];
+    console.log(args);
+    const [key, value] = [args[1], args[3]];
     store[key] = value;
 
     console.log([key, value]);
