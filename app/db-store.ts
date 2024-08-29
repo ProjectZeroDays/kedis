@@ -44,7 +44,7 @@ export default class DBStore {
       this.master = { host, port: parseInt(port), id: masterId };
     }
 
-    // if (this.role === "slave") this.connectMaster();
+    if (this.role === "slave") this.connectMaster();
   }
 
   private connectMaster() {
