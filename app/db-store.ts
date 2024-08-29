@@ -86,7 +86,7 @@ export default class DBStore {
         for (const c of parsed) {
           const { command, params } = c!;
 
-          console.log(command);
+          console.log("command:", command);
           const func = commands[command];
           func(socket, params, this, data);
         }
