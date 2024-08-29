@@ -76,6 +76,16 @@ class Commands {
 
     c.write(Parser.listResponse(keys));
   }
+
+  static INFO(c: net.Socket, args: [number, string][], store: DBStore) {
+    const res: string[] = [];
+    
+    res.push("role:master");
+    res.push(`master_replid:${store.id}`);
+    res.push(`master_reploffset:${store.offset}`);
+
+    c.write(Parser.listResponse(res));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -84,5 +94,6 @@ export const commands: Record<Command, CommandFunc> = {
   SET: Commands.SET,
   GET: Commands.GET,
   CONFIG: Commands.CONFIG,
-  KEYS: Commands.KEYS
+  KEYS: Commands.KEYS,
+  INFO: Commands.INFO,
 };

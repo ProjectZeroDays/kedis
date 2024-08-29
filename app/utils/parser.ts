@@ -89,7 +89,7 @@ export default class Parser {
       }
     }
 
-    if (["CONFIG", "KEYS"].includes(command)) {
+    if (["CONFIG", "KEYS", "INFO"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$")) continue;
 

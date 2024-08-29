@@ -4,6 +4,8 @@ export default class DBStore {
     data: Record<string, DBItem> = {};
     dir: string;
     dbfilename: string;
+    id: string = `${crypto.randomUUID()}`;
+    offset: number = 0;
 
     constructor(dir: string, dbfilename: string) {
         this.dir = dir;
