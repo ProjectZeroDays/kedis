@@ -19,6 +19,8 @@ class Commands {
   }
 
   static SET(c: net.Socket, args: [number, string][], store: DBStore) {
+    console.log(args);
+
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
 
