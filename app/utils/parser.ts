@@ -38,7 +38,7 @@ export default class Parser {
 
   static dynamicResponse(value: string | number) {
     // if (typeof value === "string") {
-      return Parser.stringResponse(String(value));
+    return Parser.stringResponse(String(value));
     // }
 
     // return Parser.numberResponse(value);
@@ -77,8 +77,15 @@ export default class Parser {
 
   static readRdbFile(data: Buffer) {
     const txt = data.toString();
-    const parts = txt.split(/\*/);
-    const wanted = parts.filter(p => p.startsWith("*") && p.includes("redis-ver"));
+    if (!txt.startsWith("*")) return undefined;
+
+    const parts = txt.substring(1).split(/\*/);
+    // add the star to the start of the first part:
+    parts[0] = "*" + parts[0];
+
+    const wanted = parts.filter(
+      (p) => p.startsWith("*") && p.includes("redis-ver")
+    );
 
     if (wanted.length > 0) return wanted[0];
   }
