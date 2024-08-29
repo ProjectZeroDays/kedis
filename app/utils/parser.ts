@@ -24,7 +24,7 @@ export default class Parser {
 
   static fileResponse(path: string) {
     const contents = fs.readFileSync(path).toString();
-    // console.log(contents);
+    console.log(contents);
     return `$${contents.length}\r\n${contents}`;
   }
 
