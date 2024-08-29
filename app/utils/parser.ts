@@ -16,6 +16,10 @@ export default class Parser {
     return `$${txt.length}\r\n${txt}\r\n`;
   }
 
+  static simpleResponse(txt: string) {
+    return `+${txt}\r\n`;
+  }
+
   static numberResponse(num: number) {
     return `:${num}\r\n`;
   }
@@ -92,7 +96,7 @@ export default class Parser {
       }
     }
 
-    if (["CONFIG", "KEYS", "INFO"].includes(command)) {
+    if (["CONFIG", "KEYS", "INFO", "PSYNC"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$")) continue;
 

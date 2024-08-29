@@ -89,6 +89,11 @@ class Commands {
   static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
     c.write(Parser.okResponse());
   }
+
+  static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
+    const [replid, offset] = [args[0][1], args[1][1]];
+    c.write(Parser.simpleResponse(`FULLRESYNC ${store.id} 0`));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -100,4 +105,5 @@ export const commands: Record<Command, CommandFunc> = {
   KEYS: Commands.KEYS,
   INFO: Commands.INFO,
   REPLCONF: Commands.REPLCONF,
+  PSYNC: Commands.PSYNC,
 };
