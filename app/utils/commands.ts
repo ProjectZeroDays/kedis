@@ -150,7 +150,7 @@ class Commands {
     }
 
     if (store.role === "master") {
-      c.write(Parser.okResponse());
+      // c.write(Parser.okResponse());
     }
   }
 
