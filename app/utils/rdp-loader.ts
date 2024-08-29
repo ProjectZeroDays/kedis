@@ -22,18 +22,15 @@ class RDBParser {
 
     constructor(path: string) {
         this.path = path;
+        console.log("Data is persistent to:", path);
+
         try {
             this.data = fs.readFileSync(this.path);
 
-        } catch (error: any) {
+        } catch (error) {
+            console.log(`error reading RDB file: ${this.path}`);
+            console.log(error);
             this.data = new Uint8Array();
-
-            if (error.code === "ENOENT") {
-                // create the file if it doesn't exist
-                fs.writeFileSync(this.path, "");
-            } else {
-                console.error(error);
-            }
 
             return;
         }
