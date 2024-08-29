@@ -79,7 +79,7 @@ class Commands {
   static INFO(c: net.Socket, args: [number, string][], store: DBStore) {
     const res: string[] = [];
 
-    res.push("role:master");
+    res.push(`role:${store.role}`);
     res.push(`master_replid:${store.id}`);
     res.push(`master_reploffset:${store.offset}`);
 
