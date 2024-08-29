@@ -1,4 +1,4 @@
-const availableComands: Command[] = ["PING", "ECHO"];
+const availableComands: Command[] = ["PING", "ECHO", "SET", "GET"];
 
 export default function readCommand(args: string[]) {
   const cmd = args[2].toUpperCase();
