@@ -27,6 +27,7 @@ class Commands {
     }
 
     store[key] = {value, at: Date.now(), px};
+    console.log(store);
 
     c.write(Parser.okResponse());
   }
