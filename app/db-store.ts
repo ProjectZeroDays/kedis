@@ -58,7 +58,7 @@ export default class DBStore {
     socket.on("data", (data: Buffer) => {
       step += 1;
       if (step <= 2) {
-        steps[step - 1]();
+        steps[step]();
         return;
       }
     });
