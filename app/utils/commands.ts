@@ -188,7 +188,6 @@ class Commands {
       if (!parsed) return;
 
       const { command, params } = parsed;
-      console.log(command, params);
 
       if (
         Parser.matchInsensetive(command, "REPLCONF") &&
@@ -216,7 +215,7 @@ class Commands {
 
       passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
-      c.write(Parser.numberResponse(acks.length));
+      c.write(Parser.numberResponse(store.replicas.length));
     }, timeout);
   }
 }
