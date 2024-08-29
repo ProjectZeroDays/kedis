@@ -4,6 +4,14 @@ export default class Parser {
     return args;
   }
 
+  static readNumber(value: string) {
+    if (value.startsWith("$")) {
+      return parseInt(value.substring(1));
+    } else {
+      return parseInt(value);
+    }
+  }
+
   static stringResponse(txt: string) {
     return `$${txt.length}\r\n${txt}\r\n`;
   }
@@ -30,11 +38,12 @@ export default class Parser {
 
     for (const p of params) {
       if (p.startsWith("$") && !lastUnique) {
-        tempLength = parseInt(p.substring(1));
+        tempLength = this.readNumber(p);
+        lastUnique = false;
         continue;
       }
 
-      if (!lastUnique && slicedParams.length < 2) {
+      if (!lastUnique && slicedParams.length < 2 && tempLength > 0) {
         slicedParams.push([tempLength, p]);
         tempLength = 0;
         lastUnique = false;
@@ -46,8 +55,8 @@ export default class Parser {
         continue;
       }
 
-      if ((lastUnique || "").toLowerCase() === "px" && !isNaN(parseInt(p.substring(1)))) {
-        slicedParams.push([parseInt(p), "--PX--"]);
+      if ((lastUnique || "").toLowerCase() === "px" && !isNaN(this.readNumber(p))) {
+        slicedParams.push([this.readNumber(p), "--PX--"]);
         lastUnique = false;
         continue;
       }
