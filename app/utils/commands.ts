@@ -148,7 +148,9 @@ class Commands {
       return;
     }
 
-    c.write(Parser.okResponse());
+    if (store.role === "master") {
+      c.write(Parser.okResponse());
+    }
   }
 
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
