@@ -21,11 +21,13 @@ export default class DBStore {
     }
 
     get(key: string) {
+        console.log(this.data);
         const data = this.data[key];
+        const now = new Date();
 
         if (!data) return null;
 
-        if (data.px && data.px > new Date()) {
+        if ((data.px ?? now) < now) {
             delete this.data[key];
             return null;
         }
