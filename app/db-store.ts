@@ -52,6 +52,7 @@ export default class DBStore {
     const socket = new net.Socket();
     socket.connect(master.port, master.host);
     let step = 0;
+    let loadedFile: boolean = false;
 
     const steps = [
       () => socket.write(Parser.listResponse(["PING"])),
@@ -68,27 +69,23 @@ export default class DBStore {
     ];
 
     socket.on("data", (data: Buffer) => {
-      console.log("Message from master: ", Parser.getArgs(data));
-
       const file = `/tmp/${Date.now()}.rdb`;
       const contents = Parser.readRdbFile(data);
 
-      if (contents) {
+      if (!loadedFile && contents) {
         fs.writeFileSync(file, contents);
         this.data = loadRDB(file);
-        console.log("Loaded file:", this.data);
         fs.unlinkSync(file);
+        loadedFile = true;
       }
 
-      if (step >= steps.length) {
-        const parsed = Parser.parseBatch(data);
+      const parsed = Parser.parseBatch(data);
 
-        for (const c of parsed) {
-          const { command, params } = c!;
+      for (const c of parsed) {
+        const { command, params } = c!;
 
-          const func = commands[command];
-          func(socket, params, this, data);
-        }
+        const func = commands[command];
+        func(socket, params, this, data);
       }
 
       step += 1;
@@ -111,10 +108,8 @@ export default class DBStore {
   }
 
   pushToReplicas(txt: string) {
-    // const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
     this.replicas.forEach((r) => r[1].write(txt));
-    // this.commands.push(raw);
   }
 
   set(

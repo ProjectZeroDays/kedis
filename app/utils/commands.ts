@@ -91,7 +91,10 @@ class Commands {
   static DEL(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
     const key = args[0][1];
     store.delete(raw, key);
-    if (store.role === "master") c.write(Parser.okResponse());
+    if (store.role === "master") {
+      store.pushToReplicas(Parser.listResponse(["DEL", key]));
+      c.write(Parser.okResponse());
+    }
   }
 
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
@@ -119,8 +122,14 @@ class Commands {
     c.write(Parser.stringResponse(res.join("\n")));
   }
 
-  static REPLCONF(c: net.Socket) {
-    c.write(Parser.okResponse());
+  static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
+    const cmdType = args[0][1];
+
+    if (cmdType === "GETACK") {
+      c.write(Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
+    }
+
+    // c.write(Parser.okResponse());
   }
 
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
