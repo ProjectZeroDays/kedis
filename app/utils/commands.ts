@@ -199,7 +199,7 @@ class Commands {
         if (passed) return;
         passed = true;
         store.replicas.forEach((r) => r[1].off("data", listener));
-        c.write(Parser.numberResponse(neededRepls));
+        c.write(Parser.numberResponse(store.replicas.length));
       }
     };
 
