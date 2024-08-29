@@ -33,7 +33,7 @@ class Commands {
     }
 
     store.set(raw, key, value, px);
-    c.write(Parser.okResponse());
+    if (store.role === "master") c.write(Parser.okResponse());
   }
 
   static GET(c: net.Socket, args: [number, string][], store: DBStore) {
@@ -70,7 +70,7 @@ class Commands {
   static DEL(c: net.Socket, args: [number, string][], store: DBStore, raw: Buffer) {
     const key = args[0][1];
     store.delete(raw, key);
-    c.write(Parser.okResponse());
+    if (store.role === "master") c.write(Parser.okResponse());
   }
 
   static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
