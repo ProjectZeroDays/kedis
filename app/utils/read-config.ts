@@ -22,7 +22,7 @@ function validateConfig(args: Record<string, string>) {
 
     if (!dir || !dbfilename) {
         // log that they're not defined and define a default one
-        dir = '/temp/data';
+        dir = '/tmp';
         dbfilename = 'db.rdb';
         console.log(`dir or dbfilename not defined, falling back to default values: ${dir}, ${dbfilename}`)
     }
