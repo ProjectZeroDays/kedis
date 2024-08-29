@@ -43,8 +43,6 @@ export default class DBStore {
     tcp.send(Parser.listResponse(["PING"]));
     tcp.send(Parser.listResponse(["REPLCONF", "listening-port", this.port.toString()]))
     tcp.send(Parser.listResponse(["REPLCONF", "capa", "psync2"]));
-
-    tcp.close();
   }
 
   set(key: string, value: string, px?: number) {

@@ -9,11 +9,12 @@ export default class TCP {
         this.port = port;
         this.host = host;
         this.socket = new net.Socket();
-        this.socket.connect(port, host);
     }
 
     send(msg: string) {
+        this.socket.connect(this.port, this.host);
         this.socket.write(msg);
+        this.socket.end();
     }
 
     close() {
