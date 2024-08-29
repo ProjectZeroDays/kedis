@@ -129,34 +129,10 @@ class RDBParser {
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
-            switch (type) {
-                case 0: // string encoding
-                    const str = this.readEncodedString();
+            const str = this.readEncodedString();
 
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: str, px: expiration, type: "string" };
-                    }
-                    break;
-                case 12: // list encoding
-                    const list = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: list, px: expiration, type: "string" };
-                    }
-                    break;
-                case 252: // hash encoding
-                    const hash = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: hash, px: expiration, type: "string" };
-                    }
-                    break;
-                case 10: // set encoding
-                    const set = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: set, px: expiration, type: "string" };
-                    }
-                    break;
-                default:
-                    console.error("type not implemented: " + type);
+            if ((expiration ?? now) >= now) {
+                this.entries[key] = { value: str, px: expiration, type: "string" };
             }
         }
     }
