@@ -23,7 +23,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     const { command, params } = parsed;
 
     const func = commands[command];
+    if (!func) return;
+
     func(connection, params, store, data);
+    store.offset += data.length;
   });
 });
 

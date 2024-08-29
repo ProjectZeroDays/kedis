@@ -92,6 +92,8 @@ export default class DBStore {
       if (step <= steps.length - 1) {
         steps[step]();
       }
+      
+      this.offset += data.length;
     });
 
     // start step
