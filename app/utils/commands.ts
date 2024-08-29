@@ -51,13 +51,13 @@ class Commands {
     const res: string[] = [];
 
     for (const a of args) {
-      if (Parser.matchInsensetive(a[1], "dir")) {
+      if (Parser.matchInsensetive(a[1], Parser.stringResponse("dir"))) {
         res.push("dir");
         res.push(Parser.stringResponse(store.dir));
         continue;
       }
 
-      if (Parser.matchInsensetive(a[1], "dbfilename")) {
+      if (Parser.matchInsensetive(a[1], Parser.stringResponse("dbfilename"))) {
         res.push("dbfilename");
         res.push(Parser.stringResponse(store.dbfilename));
       }
