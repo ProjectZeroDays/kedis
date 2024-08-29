@@ -24,7 +24,10 @@ export default class Parser {
 
   static fileResponse(path: string) {
     const contents = fs.readFileSync(path).toString();
-    console.log(contents);
+
+    // log the base64 value of contents:
+    console.log(Buffer.from(contents).toString("base64"));
+
     return `$${contents.length}\r\n${contents}`;
   }
 
