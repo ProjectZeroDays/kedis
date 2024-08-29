@@ -19,6 +19,7 @@ function parseArgs(args: string[]) {
 function validateConfig(args: Record<string, string>) {
     let dir = args['dir'];
     let dbfilename = args['dbfilename'];
+    let port = parseInt(args['port'] || '6379');
 
     if (!dir || !dbfilename) {
         // log that they're not defined and define a default one
@@ -27,5 +28,5 @@ function validateConfig(args: Record<string, string>) {
         console.log(`dir or dbfilename not defined, falling back to default values: ${dir}, ${dbfilename}`)
     }
 
-    return { dir, dbfilename };
+    return { dir, dbfilename, port };
 }

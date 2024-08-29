@@ -7,7 +7,6 @@ import readConfig from "./utils/read-config";
 const config = readConfig();
 const store = new DBStore(config.dir, config.dbfilename);
 
-
 const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (data: Buffer) => {
     const { command, params } = Parser.parse(data);
@@ -16,4 +15,4 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(6379, "127.0.0.1");
+server.listen(config.port, "127.0.0.1");
