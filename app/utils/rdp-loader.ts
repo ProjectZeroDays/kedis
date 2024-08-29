@@ -112,7 +112,7 @@ class RDBParser {
     }
 
     readEntries() {
-        const now = new Date();
+        const now = Date.now();
 
         while (this.index < this.data.length) {
             let type = this.data[this.index++];
@@ -121,54 +121,21 @@ class RDBParser {
                 this.index--;
                 break;
             } else if (type === 0xFC) { // Expire time in milliseconds
-                const milliseconds=this.readUnint64();
-                expiration = new Date(Number(milliseconds));
+                expiration = new Date(this.readEncodedInt());
+                type = this.data[this.index++];
             } else if (type === 0xFD) { // Expire time in se
-                const seconds = this.readUint32();
+                const seconds=this.readUint32();
                 expiration = new Date(Number(seconds) * 1000);
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
             switch (type) {
                 case 0: // string encoding
-                    const string = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: string, px: expiration, type: "string" };
-                    }
-                    break;
-                case 12: // list encoding
-                    const list = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: list, px: expiration, type: "string" };
-                    }
-                    break;
-                case 252: // hash encoding
-                    const hash = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: hash, px: expiration, type: "string" };
-                    }
-                    break;
-                case 10: // set encoding
-                    const set = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: set, px: expiration, type: "string" };
-                    }
-                    break;
-                case 9: // zset encoding
-                    const zset = this.readEncodedString();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: zset, px: expiration, type: "string" };
-                    }
-                    break;
-                case 5: // int encoding
-                    const int = this.readUint32();
-                    if ((expiration ?? now) >= now) {
-                        this.entries[key] = { value: int, px: expiration, type: "number" };
-                    }
+                    const value = this.readEncodedString();
+                    this.entries[key] = { value, px: expiration, type: "string" };
                     break;
                 default:
-                    console.error("type not implemented: " + type);
-
+                    throw Error("type not implemented: " + type);
             }
         }
     }
@@ -210,14 +177,12 @@ class RDBParser {
         }
         return length;
     }
-
-    readEncodedString():string{
-        const length=this.readEncodedInt();
-        const str=bytesToString(this.data.slice(this.index,this.index+length));
-        this.index+=length;
+    readEncodedString(): string {
+        const length = this.readEncodedInt();
+        const str = bytesToString(this.data.slice(this.index, this.index + length));
+        this.index += length;
         return str;
     }
-
     getEntries(): Record<string, DBItem> {
         return this.entries;
     }
