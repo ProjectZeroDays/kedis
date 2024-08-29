@@ -53,6 +53,7 @@ class Commands {
     store.set(raw, key, value, px);
     if (store.role === "master") {
       const msg = Parser.listResponse([raw.toString()]);
+      msg.replace("set", "SET");
 
       store.pushToReplicas(msg);
       c.write(Parser.okResponse());
