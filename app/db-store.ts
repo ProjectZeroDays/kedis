@@ -80,9 +80,9 @@ export default class DBStore {
         loadedFile = true;
       }
 
-      const parsed = Parser.parse(data);
-      const c = parsed;
-      const { command, params, txt } = c!;
+      const c = Parser.parse(data);
+      if (c) {
+        const { command, params, txt } = c!;
 
         const func = commands[command];
         if (func) {
@@ -90,6 +90,7 @@ export default class DBStore {
           console.log("txt:", txt);
           this.offset += getBytes(txt);
         }
+      }
 
       // for (const c of parsed) {
       //   const { command, params, txt } = c!;
