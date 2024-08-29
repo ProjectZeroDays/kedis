@@ -1,5 +1,6 @@
 import * as net from "net";
 import { commands } from "./utils/commands";
+import Parser from "./utils/parser";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");

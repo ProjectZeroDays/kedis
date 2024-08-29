@@ -1,4 +1,4 @@
-class Parser {
+export default class Parser {
 
     static getArgs(data: Buffer) {
         const args = data.toString().split(`\r\n`);
