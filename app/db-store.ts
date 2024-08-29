@@ -110,11 +110,11 @@ export default class DBStore {
     });
   }
 
-  private pushToReplicas(raw: Buffer) {
-    const txt = raw.toString();
+  pushToReplicas(txt: string) {
+    // const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
-    this.commands.push(raw);
+    this.replicas.forEach((r) => r[1].write(txt));
+    // this.commands.push(raw);
   }
 
   set(
@@ -130,7 +130,7 @@ export default class DBStore {
     const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
-    this.pushToReplicas(raw);
+    // this.pushToReplicas(raw);
   }
 
   get(key: string) {
