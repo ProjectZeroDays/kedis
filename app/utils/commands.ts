@@ -48,7 +48,7 @@ class Commands {
     store.set(raw, key, value, px);
     if (store.role === "master") {
       const [_a, _b, _c, ...params] = Parser.getArgs(raw);
-      const msg = Parser.listResponse(["SET", ...params]);
+      const msg = Parser.listResponse(["SET", ...params.filter(p => !p.startsWith("$"))]);
       console.log("MSG", msg);
 
       store.pushToReplicas(msg);
