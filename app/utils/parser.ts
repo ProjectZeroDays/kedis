@@ -137,7 +137,9 @@ export default class Parser {
       }
     }
 
-    if (["CONFIG", "KEYS", "INFO", "PSYNC", "DEL"].includes(command)) {
+    if (
+      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF"].includes(command)
+    ) {
       for (const p of params) {
         if (p.startsWith("$")) continue;
 
