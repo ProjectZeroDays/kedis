@@ -9,3 +9,4 @@ debug: false
 #
 # Available versions: bun-1.1
 language_pack: bun-1.1
+debug: true
