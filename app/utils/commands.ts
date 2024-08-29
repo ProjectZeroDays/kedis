@@ -3,7 +3,7 @@ import Parser from "./parser";
 
 type CommandFunc = (
   c: net.Socket,
-  params: string[],
+  params: [number, string][],
   store: DBStore
 ) => void;
 
@@ -13,13 +13,13 @@ class Commands {
     c.write("+PONG\r\n");
   }
 
-  static ECHO(c: net.Socket, params: string[]) {
-    const value = Parser.stringResponse(params[3]);
+  static ECHO(c: net.Socket, params: [number, string][]) {
+    const value = Parser.stringResponse(params[0][1]);
     c.write(value);
   }
 
-  static SET(c: net.Socket, args: string[], store: DBStore) {
-    const [key, value] = [args[1], args[3]];
+  static SET(c: net.Socket, args: [number, string][], store: DBStore) {
+    const [key, value] = [args[0][1], args[1][1]];
     store[key] = value;
 
     console.log([key, value]);
@@ -28,8 +28,8 @@ class Commands {
     c.write("+OK\r\n");
   }
 
-  static GET(c: net.Socket, args: string[], store: DBStore) {
-    const key = args[3];
+  static GET(c: net.Socket, args: [number, string][], store: DBStore) {
+    const key = args[0][1];
     const value = store[key];
 
     if (!value) {
