@@ -66,15 +66,15 @@ export default class Parser {
     return str.toLowerCase() === target.toLowerCase();
   }
 
-  static parseBatch(data: Buffer) {
+  // static parseBatch(data: Buffer) {
     // const txt = data.toString();
     // const commands = txt.split(/\*/);
     // return commands
     //   .filter((c) => c.length > 0)
     //   .map((c) => Parser.parse(Buffer.from("*" + c)))
     //   .filter((c) => c !== undefined);
-    return Parser.parse(data);
-  }
+    // return Parser.parse(data);
+  // }
 
   static readRdbFile(data: Buffer) {
     const txt = data.toString();
