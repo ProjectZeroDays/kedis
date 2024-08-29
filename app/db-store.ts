@@ -44,7 +44,7 @@ export default class DBStore {
       this.master = { host, port: parseInt(port), id: masterId };
     }
 
-    if (this.role === "slave") this.connectMaster();
+    // if (this.role === "slave") this.connectMaster();
   }
 
   private connectMaster() {
@@ -104,25 +104,18 @@ export default class DBStore {
   addReplica(c: net.Socket) {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
-    // this.commands.forEach((cmd) =>
-    //   c.write(Parser.listResponse([cmd.toString()]))
-    // );
 
     c.on("close", () => {
       this.replicas = this.replicas.filter((r) => r[0] !== id);
     });
   }
 
-  private pushToReplicas(raw: Buffer) {
-    const txt = raw.toString();
-    console.warn("Replicas:", this.replicas.length);
-    this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
-    this.commands.push(raw);
-  }
-
-  updateReplica(c: net.Socket) {
-    this.commands.forEach((cmd) => c.write(cmd));
-  }
+  // private pushToReplicas(raw: Buffer) {
+  //   const txt = raw.toString();
+  //   console.warn("Replicas:", this.replicas.length);
+  //   this.replicas.forEach((r) => r[1].write(Parser.listResponse([txt])));
+  //   this.commands.push(raw);
+  // }
 
   set(
     raw: Buffer,
