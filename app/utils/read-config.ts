@@ -10,7 +10,7 @@ function parseArgs(args: string[]) {
     for (let i = 0; i < args.length; i += 2) {
         const key = args[i];
         const value = args[i + 1];
-        config[key] = value;
+        config[key.replace('--', '')] = value;
     }
 
     return validateConfig(config);
