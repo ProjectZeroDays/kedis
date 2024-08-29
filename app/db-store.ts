@@ -71,6 +71,7 @@ export default class DBStore {
       console.log("Message from master: ", data.toString());
 
       if (step === steps.length - 1) {
+        return;
         const file = `/tmp/${Date.now()}.rdb`;
         const contents = Parser.readRdbFile(data);
         if (contents) {
