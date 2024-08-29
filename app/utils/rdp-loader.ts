@@ -167,7 +167,7 @@ class RDBParser {
                         (this.data[this.index++] << 16) | (this.data[this.index++] << 24);
                 }
                 if (bitType > 2) {
-                    throw Error("length not implemented");
+                    console.error("length not implemented");
                 }
                 break;
             }
