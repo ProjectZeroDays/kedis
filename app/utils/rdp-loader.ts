@@ -137,13 +137,13 @@ class RDBParser {
                         this.entries[key] = { value: str, px: expiration, type: "string" };
                     }
                     break;
-                case 1:
-                    const num = this.readEncodedString();
+                // case 1:
+                //     const num = this.readEncodedString();
 
-                    if ((expiration ? expiration.getTime() : now) >= now) {
-                        this.entries[key] = { value: num, px: expiration, type: "string" };
-                    }
-                    break;
+                //     if ((expiration ? expiration.getTime() : now) >= now) {
+                //         this.entries[key] = { value: num, px: expiration, type: "string" };
+                //     }
+                //     break;
 
                 default:
                     throw Error("type not implemented: " + type);
