@@ -72,8 +72,8 @@ export default class DBStore {
       if (step === steps.length - 1) {
         const file = `./${Date.now()}`;
         fs.writeFileSync(file, data);
-        this.data = loadRDB("./" + file);
-        fs.unlinkSync("./" + file);
+        this.data = loadRDB(file);
+        fs.unlinkSync(file);
       }
 
       step += 1;
