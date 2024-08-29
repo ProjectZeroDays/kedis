@@ -61,6 +61,8 @@ class Commands {
       }
     }
 
+    console.log(res);
+
     c.write(res.join(""));
   }
 
