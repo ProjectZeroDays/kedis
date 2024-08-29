@@ -107,7 +107,7 @@ export default class DBStore {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
     this.commands.forEach((cmd) =>
-      c.write(Parser.listResponse([cmd.toString()]))
+      c.write(cmd)
     );
 
     c.on("close", () => {
