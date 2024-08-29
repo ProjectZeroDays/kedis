@@ -37,11 +37,11 @@ export default class Parser {
   }
 
   static dynamicResponse(value: string | number) {
-    if (typeof value === "string") {
-      return Parser.stringResponse(value);
-    }
+    // if (typeof value === "string") {
+      return Parser.stringResponse(String(value));
+    // }
 
-    return Parser.numberResponse(value);
+    // return Parser.numberResponse(value);
   }
 
   static errorResponse(txt: string) {
