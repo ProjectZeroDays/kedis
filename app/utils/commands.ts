@@ -157,10 +157,8 @@ class Commands {
   static WAIT(c: net.Socket, args: [number, string][], store: DBStore) {
     const [repls, timeout] = [args[0][0], args[1][0]];
     
-    if (repls === 0) {
-      return c.write(Parser.numberResponse(0));
-    }
-
+    
+    c.write(Parser.numberResponse(store.replicas.length));
   }
 }
 
