@@ -26,6 +26,7 @@ export const availableCommands: Command[] = [
   "INFO",
   "REPLCONF",
   "PSYNC",
+  "WAIT"
 ];
 
 class Commands {
