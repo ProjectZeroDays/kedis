@@ -70,7 +70,7 @@ export default class DBStore {
     socket.on("data", (data: Buffer) => {
       console.log("Message from master: ", data.toString());
 
-      if (step === steps.length - 100) {
+      if (step === steps.length - 1) {
         const file = `/tmp/${Date.now()}.rdb`;
         const contents = Parser.readRdbFile(data);
         if (contents) {
