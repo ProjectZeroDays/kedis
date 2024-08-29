@@ -61,7 +61,7 @@ class Commands {
       }
 
       store.pushToReplicas(Parser.listResponse(replicasCommand));
-      // c.write(Parser.okResponse());
+      c.write(Parser.okResponse());
     }
   }
 
