@@ -125,11 +125,12 @@ class Commands {
   static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
     const cmdType = args[0][1];
 
-    if (cmdType === "GETACK") {
+    if (cmdType === "GETACK" && store.role === "slave") {
       c.write(Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
+      return;
     }
 
-    // c.write(Parser.okResponse());
+    c.write(Parser.okResponse());
   }
 
   static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
