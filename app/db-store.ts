@@ -80,8 +80,11 @@ export default class DBStore {
         loadedFile = true;
       }
 
-      const c = Parser.parse(data);
-      if (c) {
+      const parsed = Parser.parseBatch(data);
+
+      for (const c of parsed) {
+        if (!c) continue;
+
         const { command, params, txt } = c!;
 
         const func = commands[command];
@@ -91,17 +94,6 @@ export default class DBStore {
           this.offset += getBytes(txt);
         }
       }
-
-      // for (const c of parsed) {
-      //   const { command, params, txt } = c!;
-
-      //   const func = commands[command];
-      //   if (func) {
-      //     func(socket, params, this, data);
-      //     console.log("txt:", txt);
-      //     this.offset += getBytes(txt);
-      //   }
-      // }
 
       step += 1;
       if (step <= steps.length - 1) {
