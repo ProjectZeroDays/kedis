@@ -16,6 +16,7 @@ export default class DBStore {
   port: number;
   path: string;
   replicas: [string, net.Socket][] = [];
+  commands: Buffer[] = [];
 
   constructor(
     role: "master" | "slave",
@@ -89,6 +90,7 @@ export default class DBStore {
   addReplica(c: net.Socket) {
     const id = `${crypto.randomUUID()}`;
     this.replicas.push([id, c]);
+    this.commands.forEach((cmd) => c.write(cmd));
 
     c.on("close", () => {
       this.replicas = this.replicas.filter((r) => r[0] !== id);
@@ -99,6 +101,11 @@ export default class DBStore {
     const txt = raw.toString();
     console.warn("Replicas:", this.replicas.length);
     this.replicas.forEach((r) => r[1].write(txt));
+    this.commands.push(raw);
+  }
+
+  updateReplica(c: net.Socket) {
+    this.commands.forEach((cmd) => c.write(cmd));
   }
 
   set(
