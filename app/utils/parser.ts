@@ -1,18 +1,23 @@
-import readCommand from "./read-command";
-
 export default class Parser {
+  static getArgs(data: Buffer) {
+    const args = data.toString().split(`\r\n`);
+    return args;
+  }
 
-    static getArgs(data: Buffer) {
-        const args = data.toString().split(`\r\n`);
-        return args;
-    }
+  static stringResponse(txt: string) {
+    return `$${txt.length}\r\n${txt}\r\n`;
+  }
 
-    static getCmd(args: string[]) {
-        return readCommand(args);
-    }
+  static parse(data: Buffer) {
+    const args = this.getArgs(data);
 
-    static string(args: string[]) {
-        const txt = args[4];
-        return `$${txt.length}\r\n${txt}\r\n`;
-    }
+    const [numOfArgs, commandLength, command, ...params] = args;
+
+    return {
+      numOfArgs,
+      commandLength,
+      command: command as Command,
+      params: params,
+    };
+  }
 }
