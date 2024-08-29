@@ -84,7 +84,7 @@ class Commands {
     res.push(`master_replid:${store.id}`);
     res.push(`master_reploffset:${store.offset}`);
 
-    c.write(Parser.listResponse(res));
+    c.write(Parser.stringResponse(res.join("\n")));
   }
 }
 
