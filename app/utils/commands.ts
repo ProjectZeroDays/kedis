@@ -27,7 +27,7 @@ export const availableCommands: Command[] = [
   "INFO",
   "REPLCONF",
   "PSYNC",
-  "WAIT"
+  "WAIT",
 ];
 
 class Commands {
@@ -174,10 +174,14 @@ class Commands {
     const [repls, timeout] = [args[0][0], args[1][0]];
 
     // get the minimum number between store.replicas.length and repls
-    const neededRepls = Math.min(store.replicas.length, repls);
+    let neededRepls = Math.min(store.replicas.length, repls);
 
     if (neededRepls === 0) {
       return c.write(Parser.numberResponse(store.replicas.length));
+    }
+
+    if (neededRepls > store.replicas.length) {
+      neededRepls = store.replicas.length;
     }
 
     let timeoutHandler: NodeJS.Timeout;
@@ -215,7 +219,11 @@ class Commands {
 
       passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
-      c.write(Parser.numberResponse(acks.length === 0 ? store.replicas.length : acks.length));
+      c.write(
+        Parser.numberResponse(
+          acks.length === 0 ? store.replicas.length : acks.length
+        )
+      );
     }, timeout);
   }
 }
