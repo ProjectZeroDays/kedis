@@ -129,10 +129,16 @@ class RDBParser {
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
-            const str = this.readEncodedString();
+            switch (type) {
+                case 0: // string encoding
+                    const str = this.readEncodedString();
 
-            if ((expiration ? expiration.getTime() : now) >= now) {
-                this.entries[key] = { value: str, px: expiration, type: "string" };
+                    if ((expiration ? expiration.getTime() : now) >= now) {
+                        this.entries[key] = { value: str, px: expiration, type: "string" };
+                    }
+                    break;
+                default:
+                    throw Error("type not implemented: " + type);
             }
         }
     }
@@ -167,7 +173,7 @@ class RDBParser {
                         (this.data[this.index++] << 16) | (this.data[this.index++] << 24);
                 }
                 if (bitType > 2) {
-                    console.error("length not implemented");
+                    throw Error("length not implemented");
                 }
                 break;
             }
