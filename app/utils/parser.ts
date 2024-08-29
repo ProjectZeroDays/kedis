@@ -71,7 +71,7 @@ export default class Parser {
     const commands = txt.split(/\*/);
     return commands
       .filter((c) => c.length > 0)
-      .map((c) => Parser.parse(Buffer.from(c)))
+      .map((c) => Parser.parse(Buffer.from("*" + c)))
       .filter((c) => c !== undefined);
   }
 
