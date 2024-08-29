@@ -26,6 +26,7 @@ class RDBParser {
 
         try {
             this.data = fs.readFileSync(this.path);
+
         } catch (error) {
             console.log(`error reading RDB file: ${this.path}`);
             console.log(error);
@@ -128,9 +129,28 @@ class RDBParser {
                 type = this.data[this.index++];
             }
             const key = this.readEncodedString();
-            const list = this.readEncodedString();
-            if ((expiration ?? now) >= now) {
-                this.entries[key] = { value: list, px: expiration, type: "string" };
+            switch (type) {
+                case 0: // string encoding
+                    const str = this.readEncodedString();
+
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value: str, px: expiration, type: "string" };
+                    }
+                    break;
+                case 12: // list encoding
+                    const list = this.readEncodedString();
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value: list, px: expiration, type: "string" };
+                    }
+                    break;
+                case 252: // hash encoding
+                    const hash = this.readEncodedString();
+                    if ((expiration ?? now) >= now) {
+                        this.entries[key] = { value: hash, px: expiration, type: "string" };
+                    }
+                    break;
+                default:
+                    throw Error("type not implemented: " + type);
             }
         }
     }
