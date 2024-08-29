@@ -180,6 +180,7 @@ class Commands {
       return c.write(Parser.numberResponse(store.replicas.length));
     }
 
+    let timeoutHandler: NodeJS.Timeout;
     let passed: boolean = false;
     const acks = [];
     const listener = (data: Buffer) => {
@@ -187,6 +188,7 @@ class Commands {
       if (!parsed) return;
 
       const { command, params } = parsed;
+      console.log(command, params);
 
       if (
         Parser.matchInsensetive(command, "REPLCONF") &&
@@ -195,7 +197,8 @@ class Commands {
         acks.push(1);
       }
 
-      if (acks.length === neededRepls) {
+      if (acks.length >= neededRepls) {
+        clearTimeout(timeoutHandler);
         if (passed) return;
         passed = true;
         store.replicas.forEach((r) => r[1].off("data", listener));
@@ -208,7 +211,7 @@ class Commands {
       r[1].write(Parser.listResponse(["REPLCONF", "GETACK", "*"]));
     });
 
-    setTimeout(() => {
+    timeoutHandler = setTimeout(() => {
       if (passed) return;
 
       passed = true;
