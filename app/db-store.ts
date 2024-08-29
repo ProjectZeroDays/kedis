@@ -143,6 +143,7 @@ export default class DBStore {
   }
 
   get(key: string) {
+    console.log(this.data);
     const data = this.data[key];
     const now = new Date();
 
