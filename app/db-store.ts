@@ -83,12 +83,12 @@ export default class DBStore {
       const parsed = Parser.parseBatch(data);
 
       for (const c of parsed) {
-        const { command, params } = c!;
+        const { command, params, txt } = c!;
 
         const func = commands[command];
         if (func) {
           func(socket, params, this, data);
-          this.offset += getBytes(data);
+          this.offset += getBytes(txt);
         }
       }
 

@@ -152,6 +152,7 @@ export default class Parser {
       commandLength,
       command: command as Command,
       params: slicedParams,
+      txt: data.toString()
     };
   }
 }
