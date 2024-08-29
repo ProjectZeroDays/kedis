@@ -1,4 +1,7 @@
 import { loadRDB } from "./utils/rdp-loader";
+import * as net from "net";
+import * as crypto from "crypto";
+import Parser from "./utils/parser";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -7,13 +10,35 @@ export default class DBStore {
   id: string = `${crypto.randomUUID()}`;
   offset: number = 0;
   role: "master" | "slave";
+  master: {host: string; port: number} | null = null;
 
-  constructor(role: "master" | "slave", dir: string, dbfilename: string) {
+  constructor(
+    role: "master" | "slave",
+    dir: string,
+    dbfilename: string,
+    master: string
+  ) {
     this.role = role;
     this.dir = dir;
     this.dbfilename = dbfilename;
 
     this.data = loadRDB({ dir, dbfilename });
+
+    if (role === "slave" && master) {
+        const [host, port] = master.split(" ");
+        this.master = { host, port: parseInt(port) };
+    }
+
+    if (this.role === "slave") this.sendTcp(Parser.listResponse(["PING"]));
+  }
+
+  sendTcp(msg: string) {
+    if (!this.master) return;
+
+    const socket = new net.Socket();
+    socket.connect(this.master.port, this.master.host);
+    socket.write(msg);
+    socket.end();
   }
 
   set(key: string, value: string, px?: number) {

@@ -8,7 +8,8 @@ const config = readConfig();
 const store = new DBStore(
   config.replicaof ? "slave" : "master",
   config.dir,
-  config.dbfilename
+  config.dbfilename,
+  config.replicaof
 );
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
