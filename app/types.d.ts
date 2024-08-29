@@ -9,7 +9,8 @@ type Command =
   | "REPLCONF"
   | "PSYNC"
   | "DEL"
-  | "WAIT";
+  | "WAIT"
+  | "TYPE";
 
 interface DBItem {
   value: string | number;

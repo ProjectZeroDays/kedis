@@ -104,7 +104,7 @@ export default class Parser {
 
     command = command.toUpperCase() as Command;
 
-    if (["GET", "SET", "ECHO", "PING"].includes(command)) {
+    if (["GET", "SET", "ECHO", "PING", "TYPE"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$") && lastUnique) continue;
 

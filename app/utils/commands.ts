@@ -28,6 +28,7 @@ export const availableCommands: Command[] = [
   "REPLCONF",
   "PSYNC",
   "WAIT",
+  "TYPE"
 ];
 
 class Commands {
@@ -226,6 +227,18 @@ class Commands {
       );
     }, timeout);
   }
+
+  static TYPE(c: net.Socket, args: [number, string][], store: DBStore) {
+    const key = args[0][1];
+    const value = store.get(key);
+
+    if (!value) {
+      c.write(Parser.stringResponse("none"));
+      return;
+    }
+
+    c.write(Parser.stringResponse(value.type));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -240,4 +253,5 @@ export const commands: Record<Command, CommandFunc> = {
   REPLCONF: Commands.REPLCONF,
   PSYNC: Commands.PSYNC,
   WAIT: Commands.WAIT,
+  TYPE: Commands.TYPE
 };
