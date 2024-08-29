@@ -26,12 +26,16 @@ class RDBParser {
 
         try {
             this.data = fs.readFileSync(this.path);
-
-        } catch (error) {
-            console.log(`error reading RDB file: ${this.path}`);
-            console.log(error);
+        } catch (error: any) {
+            console.error(`error reading RDB file: ${this.path}`);
             this.data = new Uint8Array();
 
+            if (error.code === "ENOENT") {
+                console.error("RDB file not found");
+                return;
+            }
+
+            console.error(error);
             return;
         }
     }
