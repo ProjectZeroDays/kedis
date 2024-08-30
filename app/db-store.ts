@@ -158,7 +158,7 @@ export default class DBStore {
       return 0;
     }
 
-    this.set(key, item.value + value.toString());
+    this.set(key, (item.value + value).toString());
     return item.value + value;
   }
 
