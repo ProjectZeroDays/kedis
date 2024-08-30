@@ -52,7 +52,7 @@ function xReadMultiResponse(
     return Parser.nilResponse();
   }
 
-  let response = `*${data.length}\r\n`;
+  let response = ``;
 
   data.forEach((entries, index) => {
     response += xReadResponse(streamKeys[index], entries, streamKeys.length);
