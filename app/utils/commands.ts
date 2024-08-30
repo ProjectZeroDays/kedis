@@ -443,7 +443,7 @@ class Commands {
     const value = store.increment(key);
 
     if (value === null) {
-      return c.write(Parser.nilResponse());
+      return c.write(Parser.errorResponse("ERR value is not an integer or out of range"));
     }
 
     c.write(Parser.numberResponse(value));
