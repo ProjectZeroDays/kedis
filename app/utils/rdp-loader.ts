@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import { bytesToString } from "./helpers";
 
-const emptyBase64 = "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
+const emptyBase64 =
+  "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
 
 export function loadRDB(filePath: string) {
   const rdb = new RDBParser(filePath);
@@ -27,7 +28,9 @@ class RDBParser {
         // write the base64 as bytes to the file
         try {
           // create the file first
-          fs.mkdirSync(path.split("/").slice(0, -1).join("/") , { recursive: true });
+          fs.mkdirSync(path.split("/").slice(0, -1).join("/"), {
+            recursive: true,
+          });
           fs.writeFileSync(this.path, Buffer.from(emptyBase64, "base64"));
         } catch (err) {
           console.error("Can't persist data due to multiple errors");
@@ -148,7 +151,13 @@ class RDBParser {
           const value = this.readEncodedString();
           console.log(key, value, expiration);
           if ((expiration ?? now) >= now) {
-            this.entries[key] = { value, px: expiration, type: "string" };
+            this.entries[key] = {
+              value,
+              px: expiration,
+              type: "string",
+              itemType: "base",
+              id: `${crypto.randomUUID()}`,
+            };
           }
           break;
         }
