@@ -21,6 +21,7 @@ export default class DBStore {
   commands: Buffer[] = [];
   locked: boolean = false;
   replicationOffset: number = 0;
+  streamsBlocksTiming: Record<string, number> = {};
 
   constructor(
     role: "master" | "slave",

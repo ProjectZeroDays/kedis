@@ -349,8 +349,8 @@ class Commands {
         return;
       }
 
-      const ids = stream.entries.map((e) => e[0]);
-      const startId = ids.indexOf(id);
+      // const ids = stream.entries.map((e) => e[0]);
+      // const startId = ids.indexOf(id);
 
       return reads.push(stream);
     }
@@ -377,8 +377,6 @@ class Commands {
     }
 
     const res = Parser.streamMultiXResponse(streams, reads);
-    console.log("res", res);
-
     c.write(res);
   }
 }
