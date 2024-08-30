@@ -239,6 +239,10 @@ class Commands {
 
     c.write(Parser.stringResponse(value.type));
   }
+
+  static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
+    
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -253,5 +257,6 @@ export const commands: Record<Command, CommandFunc> = {
   REPLCONF: Commands.REPLCONF,
   PSYNC: Commands.PSYNC,
   WAIT: Commands.WAIT,
-  TYPE: Commands.TYPE
+  TYPE: Commands.TYPE,
+  XADD: Commands.XADD
 };

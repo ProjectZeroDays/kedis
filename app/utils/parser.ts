@@ -151,6 +151,10 @@ export default class Parser {
       slicedParams.push([parseInt(params[1]), "WAIT"], [parseInt(params[3]), ""]);
     }
 
+    if (command === "XADD") {
+      console.log(params);
+    }
+
     return {
       numOfArgs,
       commandLength,

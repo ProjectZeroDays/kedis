@@ -10,7 +10,8 @@ type Command =
   | "PSYNC"
   | "DEL"
   | "WAIT"
-  | "TYPE";
+  | "TYPE"
+  | "XADD";
 
 interface DBItem {
   value: string | number;
