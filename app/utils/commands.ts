@@ -352,17 +352,8 @@ class Commands {
 
       const ids = stream.entries.map((e) => e[0]);
       const startId = ids.indexOf(id);
+
       console.log("Read stream:", streamKey, id);
-
-      if (id === "0-0") {
-        return reads.push(Parser.streamXResponse(stream));
-      }
-
-      // if (startId !== -1) {
-      //   const data = stream.entries;
-      //   stream.entries = data;
-      // }
-
       return reads.push(Parser.streamXResponse(stream));
     }
 
