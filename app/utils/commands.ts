@@ -318,6 +318,23 @@ class Commands {
       return c.write(Parser.listResponse([]));
     }
 
+    stream.value = Object.fromEntries(
+      Object.entries(stream.value).slice(
+        Object.keys(stream.value).indexOf(start)
+      )
+    );
+
+    if (end === "+") {
+      return c.write(Parser.streamItemResponse(stream));
+    }
+
+    stream.value = Object.fromEntries(
+      Object.entries(stream.value).slice(
+        0,
+        Object.keys(stream.value).indexOf(end)
+      )
+    );
+
     return c.write(Parser.streamItemResponse(stream));
   }
 }
