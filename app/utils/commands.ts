@@ -357,7 +357,6 @@ class Commands {
       streamKey: string,
       id: string,
     ) {
-      console.log(streamKey, id);
 
       if (block > -1) {
         let didread: boolean = false;

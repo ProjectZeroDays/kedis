@@ -151,6 +151,7 @@ export default class DBStore {
     value: Record<string, BaseDBItem>,
     type: StreamDBItem["type"] = "stream"
   ) {
+    console.log({ key, value, type });
     const existItem = this.data[key] as StreamDBItem | undefined;
     const entries: StreamDBItem["entries"] = [];
     const keyValue: [string, string | number][] = [];
