@@ -321,8 +321,8 @@ class Commands {
     }
 
     const ids = stream.entries.map((e) => e[0]);
-    const startId = ids.indexOf(start);
-    const endId = ids.indexOf(end);
+    const startId = start === "-" ? 0 : ids.indexOf(start);
+    const endId = end === "+" ? ids.length - 1 : ids.indexOf(end);
 
     if (startId === -1 || endId === -1) {
       return c.write(Parser.listResponse([]));
