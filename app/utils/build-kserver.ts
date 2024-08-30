@@ -22,6 +22,7 @@ export default function buildKServer(c: net.Socket, store: DBStore) {
 
   kserver.queueCommand = (c: KServer, data: Buffer) => {
     c.queue.add(data);
+    c.write(Parser.simpleResponse("QUEUED"));
   };
 
   kserver.executeQueued = async (c) => {
