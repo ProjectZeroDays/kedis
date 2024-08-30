@@ -22,6 +22,7 @@ export default class DBStore {
   locked: boolean = false;
   replicationOffset: number = 0;
   streamsBlocksTiming: Record<string, number> = {};
+  streamListeners: Record<string, [number, (data: Buffer) => void]> = {};
 
   constructor(
     role: "master" | "slave",
@@ -148,7 +149,7 @@ export default class DBStore {
   setStream(
     key: string,
     value: Record<string, BaseDBItem>,
-    type: StreamDBItem["type"] = "stream",
+    type: StreamDBItem["type"] = "stream"
   ) {
     const existItem = this.data[key] as StreamDBItem | undefined;
     const entries: StreamDBItem["entries"] = [];
@@ -159,7 +160,7 @@ export default class DBStore {
     }
 
     if (existItem) {
-      Object.keys(value).forEach(element => {
+      Object.keys(value).forEach((element) => {
         existItem.value[element] = value[element];
         existItem.entries.push([value[element].id, keyValue]);
         entries.push([value[element].id, keyValue]);
@@ -167,7 +168,7 @@ export default class DBStore {
 
       return;
     } else {
-      Object.keys(value).forEach(element => {
+      Object.keys(value).forEach((element) => {
         entries.push([value[element].id, keyValue]);
       });
     }
@@ -182,6 +183,30 @@ export default class DBStore {
 
     this.data[key] = item;
     this.streamsBlocksTiming[key] = Date.now();
+  }
+
+  addStreamListener(
+    key: string,
+    time: number,
+    listener: (data: Buffer) => void
+  ) {
+    this.streamListeners[key] = [time, listener];
+
+    setTimeout(() => {
+      delete this.streamListeners[key];
+    }, time);
+  }
+
+  getStreamListener(key: string) {
+    return this.streamListeners[key];
+  }
+
+  deleteStreamListener(key: string) {
+    delete this.streamListeners[key];
+  }
+
+  getStream(key: string) {
+    return this.data[key] as StreamDBItem | undefined;
   }
 
   get(key: string) {

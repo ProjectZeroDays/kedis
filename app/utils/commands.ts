@@ -351,15 +351,20 @@ class Commands {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
       const latestStream = store.streamsBlocksTiming[streamKey];
 
-      if (latestStream && Date.now() - latestStream < block) {
-        c.write(Parser.nilResponse());
-        return undefined;
-      }
-
-      if (!stream) {
-        console.log("Stream not found");
+      if (!stream && block === 0) {        
         return;
       }
+
+      if (!stream && block > 0) {
+        store.addStreamListener(
+          streamKey,
+          block,
+          () => readOne(streamKey, id)
+        );
+        return;
+      }
+
+      if (!stream) return;
 
       return reads.push(stream);
     }
