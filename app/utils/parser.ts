@@ -45,19 +45,19 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
-    const entries: [string, string][] = [];
+    const entries: string[] = [];
     let latestId = "";
 
     item.entries.forEach((e) => {
       const [id, value] = e;
-      entries.push([
+      entries.push(Parser.listResponse([
         Parser.stringResponse(id),
         Parser.listResponse(value.map((v) => String(v[1]))),
-      ]);
+      ]));
       latestId = id;
     });
 
-    return Parser.listResponse(entries.map(e => Parser.listResponse(e)));
+    return Parser.listResponse(entries);
   }
 
   static errorResponse(txt: string) {
