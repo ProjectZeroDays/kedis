@@ -352,6 +352,10 @@ class Commands {
     const ids = stream.entries.map((e) => e[0]);
     const startId = ids.indexOf(id);
 
+    if (id === "0-0") {
+      return c.write(Parser.streamItemResponse(stream));
+    }
+
     if (startId === -1) {
       return c.write(Parser.listResponse([]));
     }
