@@ -197,9 +197,9 @@ export default class DBStore {
   ) {
     if (!this.streamListeners[key]) {
       this.streamListeners[key] = [];
-    } else {
-      this.streamListeners[key].push([time, listener]);
     }
+
+    this.streamListeners[key].push([time, listener]);
 
     setTimeout(() => {
       this.streamListeners[key] = this.streamListeners[key].filter(

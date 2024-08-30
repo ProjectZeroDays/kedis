@@ -340,7 +340,7 @@ class Commands {
     c.write(Parser.streamItemResponse(stream));
   }
 
-  static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
+  static async XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
     const reads: StreamDBItem[] = [];
     let block: number = 0;
@@ -350,12 +350,11 @@ class Commands {
       args.shift();
     }
 
-    function readOne(streamKey: string, id: string) {
-      if (block > 0) {
+    async function readOne(streamKey: string, id: string, ignoreBlock: boolean = false) {
+      if (!ignoreBlock && block > 0) {
         let didread: boolean = false;
         store.addStreamListener(streamKey, block, (data) => {
           didread = true;
-          c.write(Parser.streamXResponse(data));
           reads.push(data);
         });
 
@@ -364,6 +363,12 @@ class Commands {
             c.write(Parser.nilResponse());
           }
         }, block);
+
+        await sleep(block);
+
+        if (!didread) {
+          c.write(Parser.nilResponse());
+        }
 
         return;
       }
@@ -388,7 +393,7 @@ class Commands {
       const streamKey = args[0][1];
       const id = args[1][1];
 
-      readOne(streamKey, id);
+      await readOne(streamKey, id);
       if (reads.length > 0) c.write(Parser.streamXResponse(reads[0]));
       return;
     }
@@ -403,7 +408,7 @@ class Commands {
     const streamIds = ids.map((i) => i[1]);
 
     for (let i = 0; i < streams.length; i++) {
-      readOne(streams[i], streamIds[i]);
+      await readOne(streams[i], streamIds[i]);
     }
 
     if (reads.length < 1) return;
