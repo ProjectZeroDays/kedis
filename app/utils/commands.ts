@@ -378,6 +378,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
+    console.log("read length:", reads.length);
     c.write(`*${reads.length}\r\n${reads.join("")}`);
   }
 }
