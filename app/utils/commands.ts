@@ -376,7 +376,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    const res = Parser.listResponse(reads.map((r) => Parser.streamXResponse(r)));
+    const res = Parser.listResponse(reads.map((r) => Parser.streamXResponse(r)), false);
     console.log("res", res);
 
     c.write(res);

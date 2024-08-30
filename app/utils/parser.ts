@@ -108,14 +108,14 @@ export default class Parser {
     return `-${txt}\r\n`;
   }
 
-  static listResponse(list: any[]) {
+  static listResponse(list: any[], encodeString: boolean = true) {
     let res = `*${list.length}\r\n`;
 
     for (const item of list) {
       if (Array.isArray(item)) {
         res += Parser.listResponse(item);
       } else {
-        res += item.startsWith("$") ? item : Parser.stringResponse(String(item));
+        res += !encodeString ? item : Parser.stringResponse(String(item));
       }
     }
 
