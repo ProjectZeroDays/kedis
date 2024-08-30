@@ -28,14 +28,14 @@ function xReadResponse(
 
   const encodedEntries = data
     .map(([id, fields]) => {
-      const fieldEntries = Object.entries(fields)
+      const fieldEntries = fields
         .map(([key, value]: [string, any]) => {
           return `$${key.length}\r\n${key}\r\n$${value.length}\r\n${value}\r\n`;
         })
         .join("");
 
       return `*2\r\n$${id.length}\r\n${id}\r\n*${
-        Object.entries(fields).length * 2
+        fields.length * 2
       }\r\n${fieldEntries}`;
     })
     .join("");
