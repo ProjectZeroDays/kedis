@@ -358,7 +358,16 @@ class Commands {
 
       const stream = store.get(streamKey) as StreamDBItem | undefined;
 
+      // slice stream entries from startId
       if (!stream) return;
+
+      const ids = stream.entries.map((e) => e[0]);
+      const startId = ids.indexOf(id);
+
+      if (startId !== -1) {
+        const data = stream.entries.slice(startId);
+        stream.entries = data;
+      }
 
       return reads.push(stream);
     }
