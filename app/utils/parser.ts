@@ -115,7 +115,7 @@ export default class Parser {
       if (Array.isArray(item)) {
         res += Parser.listResponse(item);
       } else {
-        res += Parser.stringResponse(String(item));
+        res += item.startsWith("$") ? item : Parser.stringResponse(String(item));
       }
     }
 
