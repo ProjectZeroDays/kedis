@@ -170,6 +170,7 @@ export default class DBStore {
       entries,
     };
     this.data[key] = item;
+    console.log(this.data);
   }
 
   get(key: string) {
