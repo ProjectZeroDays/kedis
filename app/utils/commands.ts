@@ -268,8 +268,6 @@ class Commands {
 
       const itemTime = id.split("-").map(i => parseInt(i));
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
-      console.log("latestEntryTime", latestEntryTime);
-      console.log("itemTime", itemTime);
 
       if (totalTime < 1) {
         return;
@@ -280,6 +278,14 @@ class Commands {
         latestEntryTime[0] > 0
       ) {
         return;
+      }
+
+      const exist = store.get(streamKey) as StreamDBItem;
+      
+      if (exist) {
+        // check if the most recent item in the exist time is equal or bigger than this
+        const times = Object.keys(exist.value).map(i => exist.value[i].id.split("-").map(i => parseInt(i)));
+        console.log("times", times);
       }
 
       latestEntryTime = itemTime;
