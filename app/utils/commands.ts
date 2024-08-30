@@ -255,6 +255,7 @@ class Commands {
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
     let latestEntryTime: number[] = [0, 0];
+    const tooSmallMsg = "ERR The ID specified in XADD must be greater than 0-0";
     const errMsg =
       "ERR The ID specified in XADD is equal or smaller than the target stream top item";
 
@@ -273,7 +274,7 @@ class Commands {
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
       if (totalTime < 1) {
-        return c.write(Parser.errorResponse(errMsg));
+        return c.write(Parser.errorResponse(tooSmallMsg));
       }
 
       if (
