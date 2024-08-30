@@ -465,6 +465,15 @@ class Commands {
 
     c.executeQueued(c);
   }
+
+  static DISCARD(c: KServer, args: [number, string][], store: DBStore) {
+    if (!c.queue.locked) {
+      return c.write(Parser.errorResponse("ERR DISCARD without MULTI"));
+    }
+
+    c.queue.discard();
+    c.write(Parser.okResponse());
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -486,4 +495,5 @@ export const commands: Record<Command, CommandFunc> = {
   INCR: Commands.INCR,
   MULTI: Commands.MULTI,
   EXEC: Commands.EXEC,
+  DISCARD: Commands.DISCARD,
 };

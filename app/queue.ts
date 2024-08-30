@@ -28,6 +28,12 @@ export default class Queue {
     this.locked = false;
   }
 
+  discard() {
+    this.queue = [];
+    this.results = [];
+    this.locked = false;
+  }
+
   addResult(data: string | Uint8Array) {
     this.results.push(data);
   }

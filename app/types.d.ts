@@ -16,7 +16,8 @@ type Command =
   | "XREAD"
   | "INCR"
   | "MULTI"
-  | "EXEC";
+  | "EXEC"
+  | "DISCARD";
 
 interface BaseDBItem {
   value: string | number;
