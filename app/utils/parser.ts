@@ -45,22 +45,19 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
-    const entries: string[] = [];
+    const entries: [string, string][] = [];
+    let latestId = "";
 
-    for (const key of Object.keys(item.value)) {
-      const value = item.value[key];
-      entries.push(key);
-      entries.push(String(value.value));
-    }
+    item.entries.forEach((e) => {
+      const [id, value] = e;
+      entries.push([
+        Parser.stringResponse(id),
+        Parser.listResponse(value.map((v) => String(v[1]))),
+      ]);
+      latestId = id;
+    });
 
-    return Parser.listResponse(
-      [
-        Parser.stringResponse(item.streamKey),
-        Parser.listResponse(
-          entries.map((e) => Parser.stringResponse(e))
-        ),
-      ]
-    );
+    return Parser.listResponse(entries.map(e => Parser.listResponse(e)));
   }
 
   static errorResponse(txt: string) {
@@ -157,7 +154,9 @@ export default class Parser {
     }
 
     if (
-      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE"].includes(command)
+      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE"].includes(
+        command
+      )
     ) {
       for (const p of params) {
         if (p.startsWith("$")) continue;

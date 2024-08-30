@@ -164,7 +164,6 @@ export default class DBStore {
         entries.push([value[element].id, keyValue]);
       });
 
-      console.log(this.data);
       return;
     } else {
       Object.keys(value).forEach(element => {
@@ -180,7 +179,6 @@ export default class DBStore {
       entries,
     };
     this.data[key] = item;
-    console.log(this.data);
   }
 
   get(key: string) {

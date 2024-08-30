@@ -326,8 +326,6 @@ class Commands {
       )
     );
 
-    return;
-
     if (end === "+") {
       return c.write(Parser.streamItemResponse(stream));
     }
