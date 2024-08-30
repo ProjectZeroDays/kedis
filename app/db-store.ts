@@ -203,6 +203,16 @@ export default class DBStore {
     }, time);
   }
 
+  executeListeners(streamKey: string, data: StreamDBItem) {
+    const listeners = this.streamListeners[streamKey];
+
+    if (!listeners) return;
+
+    listeners.forEach((l) => {
+      l[1](data);
+    });
+  }
+
   getStreamListener(key: string) {
     return this.streamListeners[key];
   }
