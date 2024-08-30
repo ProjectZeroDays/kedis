@@ -20,14 +20,13 @@ const store = new DBStore(
 const queues: [KServer, Queue][] = [];
 
 const execute = async (kserver: KServer, data: Buffer, jump: boolean = false) => {
-  if (kserver.queue.locked && !jump) {
+  const parsed = Parser.parse(data);
+  if (!parsed) return;
+
+  if (kserver.queue.locked && !jump && parsed.command !== "EXEC") {
     kserver.queueCommand(kserver, data);
     return;
   }
-
-  const parsed = Parser.parse(data);
-  // console.log("parsed", parsed);
-  if (!parsed) return;
 
   const { command, params } = parsed;
 
