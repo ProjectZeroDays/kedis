@@ -340,6 +340,7 @@ class Commands {
   static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
     const reads: StreamDBItem[] = [];
+    let block: number = 0;
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
@@ -373,9 +374,15 @@ class Commands {
     const streamIds = ids.map((i) => i[1]);
 
     for (let i = 0; i < streams.length; i++) {
+      if (streams[i] === "block" && !isNaN(parseInt(streamIds[i]))) {
+        block = parseInt(streamIds[i]);
+        continue;
+      }
+
       readOne(streams[i], streamIds[i]);
     }
 
+    console.log("Block:", block);
     const res = Parser.streamMultiXResponse(streams, reads);
     c.write(res);
   }
