@@ -258,7 +258,7 @@ export default class Parser {
     if (command === "XREAD") {
       let latestIsBlock: boolean = false;
       params.forEach((p, index) => {
-        if (p.startsWith("$") || p.length < 1 || p === "streams") return;
+        if ((p.startsWith("$") && p !== "$") || p.length < 1 || p === "streams") return;
 
         if (latestIsBlock) {
           latestIsBlock = false;

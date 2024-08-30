@@ -170,8 +170,6 @@ export default class DBStore {
       this.streamsBlocksTiming[key] = Date.now();
       this.executeListeners(key, {...existItem, entries: entries});
 
-      console.log(this.data);
-
       return;
     } else {
       Object.keys(value).forEach((element) => {
