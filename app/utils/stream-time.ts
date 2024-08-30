@@ -4,15 +4,16 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
   let [a, b] = id.split("-");
 
   const existId = streamBiggestId(item);
-  const [c, d] = existId.split("-");
   console.log("id", id);
   console.log("existId", existId);
 
   if (a === "*") {
+    const [c, d] = streamBiggestIdByA(item).split("-");
     a = String(parseInt(c) + 1);
   }
 
   if (b === "*") {
+    const [c, d] = streamBiggestIdByB(item).split("-");
     b = String(parseInt(d) + 1);
   }
 
@@ -43,6 +44,36 @@ export function streamBiggestId(item?: StreamDBItem) {
     const bTime = b.id.split("-").map((i) => parseInt(i));
     const aTotal = aTime.reduce((a, b) => a + b, 0);
     const bTotal = bTime.reduce((a, b) => a + b, 0);
+    return aTotal > bTotal ? a : b;
+  });
+
+  return biggest.id;
+}
+
+export function streamBiggestIdByA(item?: StreamDBItem) {
+  if (!item) return "0-0";
+
+  const existValues = Object.keys(item.value).map((i) => item.value[i]);
+  const biggest = existValues.reduce((a, b) => {
+    const aTime = parseInt(a.id.split("-")[0]);
+    const bTime = parseInt(b.id.split("-")[0]);
+    const aTotal = aTime;
+    const bTotal = bTime;
+    return aTotal > bTotal ? a : b;
+  });
+
+  return biggest.id;
+}
+
+export function streamBiggestIdByB(item?: StreamDBItem) {
+  if (!item) return "0-0";
+
+  const existValues = Object.keys(item.value).map((i) => item.value[i]);
+  const biggest = existValues.reduce((a, b) => {
+    const aTime = parseInt(a.id.split("-")[1]);
+    const bTime = parseInt(b.id.split("-")[1]);
+    const aTotal = aTime;
+    const bTotal = bTime;
     return aTotal > bTotal ? a : b;
   });
 
