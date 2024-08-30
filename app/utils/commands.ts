@@ -320,23 +320,21 @@ class Commands {
       return c.write(Parser.listResponse([]));
     }
 
-    stream.value = Object.fromEntries(
-      Object.entries(stream.value).slice(
-        Object.keys(stream.value).indexOf(start)
-      )
-    );
+    const ids = stream.entries.map((e) => e[0]);
+    const startId = ids.indexOf(start);
+    const endId = ids.indexOf(end);
 
-    stream.value = Object.fromEntries(
-      Object.entries(stream.value).slice(
-        0,
-        Object.keys(stream.value).indexOf(end)
-      )
-    );
+    if (startId === -1 || endId === -1) {
+      return c.write(Parser.listResponse([]));
+    }
 
-    const res = Parser.streamItemResponse(stream)
-    console.log("res", res);
+    if (startId > endId) {
+      return c.write(Parser.listResponse([]));
+    }
 
-    return c.write(res);
+    const data = stream.entries.slice(startId, endId + 1);
+
+    c.write(Parser.streamItemResponse(stream));
   }
 }
 
