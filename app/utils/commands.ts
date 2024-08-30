@@ -356,7 +356,7 @@ class Commands {
       }
 
       if (startId !== -1) {
-        const data = stream.entries.slice(startId-1);
+        const data = stream.entries;
         stream.entries = data;
       }
 
