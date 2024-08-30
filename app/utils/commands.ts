@@ -306,6 +306,20 @@ class Commands {
 
     store.setStream(streamKey, entries, "stream");
   }
+
+  static XRANGE(c: net.Socket, args: [number, string][], store: DBStore) {
+    const key = args[0][1];
+    const start = args[1][1];
+    const end = args[2][1];
+
+    const stream = store.get(key) as StreamDBItem | undefined;
+
+    if (!stream) {
+      return c.write(Parser.listResponse([]));
+    }
+
+    return c.write(Parser.streamItemResponse(stream));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -322,4 +336,5 @@ export const commands: Record<Command, CommandFunc> = {
   WAIT: Commands.WAIT,
   TYPE: Commands.TYPE,
   XADD: Commands.XADD,
+  XRANGE: Commands.XRANGE,
 };

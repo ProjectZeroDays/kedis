@@ -162,6 +162,7 @@ export default class DBStore {
       value,
       type,
       itemType: "stream",
+      streamKey: key,
     };
     this.data[key] = item;
   }

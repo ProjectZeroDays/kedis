@@ -44,6 +44,25 @@ export default class Parser {
     // return Parser.numberResponse(value);
   }
 
+  static streamItemResponse(item: StreamDBItem) {
+    const entries: string[] = [];
+
+    for (const key of Object.keys(item.value)) {
+      const value = item.value[key];
+      entries.push(key);
+      entries.push(String(value.value));
+    }
+
+    return Parser.listResponse(
+      [
+        Parser.stringResponse(item.streamKey),
+        Parser.listResponse(
+          entries.map((e) => Parser.stringResponse(e))
+        ),
+      ]
+    );
+  }
+
   static errorResponse(txt: string) {
     return `-${txt}\r\n`;
   }
@@ -104,7 +123,7 @@ export default class Parser {
 
     command = command.toUpperCase() as Command;
 
-    if (["GET", "SET", "ECHO", "PING", "TYPE"].includes(command)) {
+    if (["GET", "SET", "ECHO", "PING", "TYPE", "XRANGE"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$") && lastUnique) continue;
 

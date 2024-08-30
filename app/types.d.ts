@@ -11,7 +11,8 @@ type Command =
   | "DEL"
   | "WAIT"
   | "TYPE"
-  | "XADD";
+  | "XADD"
+  | "XRANGE";
 
 interface BaseDBItem {
   value: string | number;
@@ -26,6 +27,7 @@ interface StreamDBItem {
   px?: Date;
   type: "stream";
   itemType: "stream";
+  streamKey: string;
 }
 
 type DBItem = BaseDBItem | StreamDBItem;
