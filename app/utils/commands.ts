@@ -338,6 +338,8 @@ class Commands {
   }
 
   static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
+    console.log(args);
+
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
 
