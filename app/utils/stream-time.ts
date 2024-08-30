@@ -16,7 +16,7 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
     const [c, d] = streamBiggestIdByB(item, parseInt(a)).split("-");
     console.log("biggestB", [c, d]);
 
-    if (`${c}-${d}}` === "0-0") {
+    if (`${c}-${d}` === "0-0") {
       b = d;
     } else {
       b = String(parseInt(d) + 1);
