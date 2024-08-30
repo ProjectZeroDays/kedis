@@ -452,6 +452,10 @@ class Commands {
   static MULTI(c: net.Socket, args: [number, string][], store: DBStore) {
     c.write(Parser.okResponse());
   }
+
+  static EXEC(c: net.Socket, args: [number, string][], store: DBStore) {
+    c.write(Parser.errorResponse("ERR EXEC without MULTI"));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -472,4 +476,5 @@ export const commands: Record<Command, CommandFunc> = {
   XREAD: Commands.XREAD,
   INCR: Commands.INCR,
   MULTI: Commands.MULTI,
+  EXEC: Commands.EXEC,
 };

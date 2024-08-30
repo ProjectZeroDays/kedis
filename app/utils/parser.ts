@@ -237,6 +237,7 @@ export default class Parser {
         "XRANGE",
         "INCR",
         "MULTI",
+        "EXEC"
       ].includes(command)
     ) {
       for (const p of params) {
