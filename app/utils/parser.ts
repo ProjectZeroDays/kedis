@@ -227,9 +227,17 @@ export default class Parser {
     }
 
     if (
-      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE", "INCR"].includes(
-        command
-      )
+      [
+        "CONFIG",
+        "KEYS",
+        "INFO",
+        "PSYNC",
+        "DEL",
+        "REPLCONF",
+        "XRANGE",
+        "INCR",
+        "MULTI",
+      ].includes(command)
     ) {
       for (const p of params) {
         if (p.startsWith("$")) continue;
@@ -258,7 +266,8 @@ export default class Parser {
     if (command === "XREAD") {
       let latestIsBlock: boolean = false;
       params.forEach((p, index) => {
-        if ((p.startsWith("$") && p !== "$") || p.length < 1 || p === "streams") return;
+        if ((p.startsWith("$") && p !== "$") || p.length < 1 || p === "streams")
+          return;
 
         if (latestIsBlock) {
           latestIsBlock = false;
