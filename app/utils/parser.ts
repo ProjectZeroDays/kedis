@@ -254,6 +254,7 @@ export default class Parser {
 
     if (command === "XREAD") {
       let latestIsBlock: boolean = false;
+      console.log(params)
       params.forEach((p, index) => {
         if (p.startsWith("$") || p.length < 1 || p === "streams") return;
 
@@ -268,6 +269,7 @@ export default class Parser {
           return;
         }
 
+        latestIsBlock = false;
         slicedParams.push([0, p]);
       });
     }
