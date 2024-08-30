@@ -349,14 +349,17 @@ class Commands {
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
+      const latestStream = store.streamsBlocksTiming[streamKey];
+
+      if (latestStream && Date.now() - latestStream < block) {
+        c.write(Parser.nilResponse());
+        return undefined;
+      }
 
       if (!stream) {
         console.log("Stream not found");
         return;
       }
-
-      // const ids = stream.entries.map((e) => e[0]);
-      // const startId = ids.indexOf(id);
 
       return reads.push(stream);
     }
@@ -366,8 +369,8 @@ class Commands {
       const id = args[1][1];
 
       readOne(streamKey, id);
-      console.log("Block:", block);
-      return c.write(Parser.streamXResponse(reads[0]));
+      if (reads.length > 0) c.write(Parser.streamXResponse(reads[0]));
+      return;
     }
 
     if (args.length < 2) return;
@@ -383,7 +386,8 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    console.log("Block:", block);
+    if (reads.length < 1) return;
+
     const res = Parser.streamMultiXResponse(streams, reads);
     c.write(res);
   }
