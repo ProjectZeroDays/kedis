@@ -4,7 +4,7 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
   let [a, b] = id.split("-");
 
   const existId = streamBiggestId(item);
-  console.log("id", id);
+  console.log("id", id, [a, b]);
   console.log("existId", existId);
 
   if (a === "*") {
