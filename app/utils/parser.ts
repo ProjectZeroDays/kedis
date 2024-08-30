@@ -8,6 +8,7 @@ function encodeXRangeResponse(data: [string, any][]): string {
     response += `*2\r\n$${id.length}\r\n${id}\r\n`;
 
     const entryArray: any[] = Object.entries(entry[0]).flat();
+    console.log("entryArray", entryArray);
     response += `*${entryArray.length}\r\n`;
 
     for (const item of entryArray) {
