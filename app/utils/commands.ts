@@ -384,7 +384,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    c.write(reads.join("\n\r"));
+    c.write(`*${reads.length}\r\n${reads.join("")}`);
   }
 }
 
