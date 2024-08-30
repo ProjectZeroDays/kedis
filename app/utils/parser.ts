@@ -41,7 +41,7 @@ function xReadResponse(
     })
     .join("");
 
-  return `*${n}\r\n*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+  return `*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
 }
 
 function xReadMultiResponse(
@@ -52,7 +52,7 @@ function xReadMultiResponse(
     return Parser.nilResponse();
   }
 
-  let response = ``;
+  let response = `*${data.length}\r\n`;
 
   data.forEach((entries, index) => {
     response += xReadResponse(streamKeys[index], entries, streamKeys.length);
