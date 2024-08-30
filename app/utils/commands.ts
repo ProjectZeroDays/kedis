@@ -3,9 +3,10 @@ import Parser from "./parser";
 import DBStore from "../db-store";
 import getBytes from "./get-bytes";
 import streamTime, { streamBiggestId, compareStreamTime } from "./stream-time";
+import { KServer } from "../k-server";
 
 type CommandFunc = (
-  c: net.Socket,
+  c: KServer,
   params: [number, string][],
   store: DBStore,
   raw: Buffer
@@ -36,22 +37,25 @@ export const availableCommands: Command[] = [
   "XADD",
   "XRANGE",
   "XREAD",
+  "INCR",
+  "MULTI",
+  "EXEC",
 ];
 
 class Commands {
-  static PING(c: net.Socket, _params: [number, string][], store: DBStore) {
+  static PING(c: KServer, _params: [number, string][], store: DBStore) {
     if (store.role === "master") {
-      c.write(Parser.simpleResponse("PONG"));
+      c.queueWrite(c, Parser.simpleResponse("PONG"));
     }
   }
 
-  static ECHO(c: net.Socket, params: [number, string][]) {
+  static ECHO(c: KServer, params: [number, string][]) {
     const value = Parser.stringResponse(params[0][1]);
-    c.write(value);
+    c.queueWrite(c, value);
   }
 
   static SET(
-    c: net.Socket,
+    c: KServer,
     args: [number, string][],
     store: DBStore,
     raw: Buffer
@@ -71,21 +75,21 @@ class Commands {
       }
 
       store.pushToReplicas(Parser.listResponse(replicasCommand));
-      c.write(Parser.okResponse());
+      c.queueWrite(c, Parser.okResponse());
     }
   }
 
-  static GET(c: net.Socket, args: [number, string][], store: DBStore) {
+  static GET(c: KServer, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     const value = store.get(key);
 
     if (!value) {
-      c.write(Parser.nilResponse());
+      c.queueWrite(c, Parser.nilResponse());
       return;
     }
 
     if (value.itemType === "stream") {
-      c.write(
+      c.queueWrite(c, 
         Parser.listResponse(
           Object.keys(value.value).map((k) => `${value.value[k].value}`)
         )
@@ -93,10 +97,10 @@ class Commands {
       return;
     }
 
-    c.write(Parser.dynamicResponse(value.value));
+    c.queueWrite(c, Parser.dynamicResponse(value.value));
   }
 
-  static GET_CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
+  static GET_CONFIG(c: KServer, args: [number, string][], store: DBStore) {
     const res: string[] = [];
 
     for (const a of args) {
@@ -112,11 +116,11 @@ class Commands {
       }
     }
 
-    c.write(Parser.listResponse(res));
+    c.queueWrite(c, Parser.listResponse(res));
   }
 
   static DEL(
-    c: net.Socket,
+    c: KServer,
     args: [number, string][],
     store: DBStore,
     raw: Buffer
@@ -125,11 +129,11 @@ class Commands {
     store.delete(raw, key);
     if (store.role === "master") {
       store.pushToReplicas(Parser.listResponse(["DEL", key]));
-      c.write(Parser.okResponse());
+      c.queueWrite(c, Parser.okResponse());
     }
   }
 
-  static CONFIG(c: net.Socket, args: [number, string][], store: DBStore) {
+  static CONFIG(c: KServer, args: [number, string][], store: DBStore) {
     const cmdType = args[0][1];
 
     if (Parser.matchInsensetive(cmdType, "get")) {
@@ -137,28 +141,28 @@ class Commands {
     }
   }
 
-  static KEYS(c: net.Socket, args: [number, string][], store: DBStore) {
+  static KEYS(c: KServer, args: [number, string][], store: DBStore) {
     const regex = args[0][1];
     const keys = store.keys(regex);
 
-    c.write(Parser.listResponse(keys));
+    c.queueWrite(c, Parser.listResponse(keys));
   }
 
-  static INFO(c: net.Socket, _args: [number, string][], store: DBStore) {
+  static INFO(c: KServer, _args: [number, string][], store: DBStore) {
     const res: string[] = [];
 
     res.push(`role:${store.role}`);
     res.push(`master_replid:${store.id}`);
     res.push(`master_repl_offset:${store.offset}`);
 
-    c.write(Parser.stringResponse(res.join("\n")));
+    c.queueWrite(c, Parser.stringResponse(res.join("\n")));
   }
 
-  static REPLCONF(c: net.Socket, args: [number, string][], store: DBStore) {
+  static REPLCONF(c: KServer, args: [number, string][], store: DBStore) {
     const cmdType = args[0][1];
 
     if (cmdType === "GETACK") {
-      c.write(Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
+      c.queueWrite(c, Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
 
       if (args.length < 3) {
         store.offset += getBytes("*\r\n");
@@ -170,14 +174,14 @@ class Commands {
     if (cmdType === "ACK") return;
 
     if (store.role === "master") {
-      c.write(Parser.okResponse());
+      c.queueWrite(c, Parser.okResponse());
     }
   }
 
-  static PSYNC(c: net.Socket, args: [number, string][], store: DBStore) {
+  static PSYNC(c: KServer, args: [number, string][], store: DBStore) {
     const [replid, offset] = [args[0][1], args[1][1]];
-    c.write(Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
-    c.write(
+    c.queueWrite(c, Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
+    c.queueWrite(c, 
       Buffer.concat([
         Buffer.from(`$${EMPTY_RDB.length}\r\n`, "utf8"),
         EMPTY_RDB,
@@ -187,14 +191,14 @@ class Commands {
     store.addReplica(c);
   }
 
-  static WAIT(c: net.Socket, args: [number, string][], store: DBStore) {
+  static WAIT(c: KServer, args: [number, string][], store: DBStore) {
     const [repls, timeout] = [args[0][0], args[1][0]];
 
     // get the minimum number between store.replicas.length and repls
     let neededRepls = Math.min(store.replicas.length, repls);
 
     if (neededRepls === 0) {
-      return c.write(Parser.numberResponse(store.replicas.length));
+      return c.queueWrite(c, Parser.numberResponse(store.replicas.length));
     }
 
     if (neededRepls > store.replicas.length) {
@@ -222,7 +226,7 @@ class Commands {
         if (passed) return;
         passed = true;
         store.replicas.forEach((r) => r[1].off("data", listener));
-        c.write(Parser.numberResponse(acks.length));
+        c.queueWrite(c, Parser.numberResponse(acks.length));
       }
     };
 
@@ -236,7 +240,7 @@ class Commands {
 
       passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
-      c.write(
+      c.queueWrite(c, 
         Parser.numberResponse(
           acks.length === 0 ? store.replicas.length : acks.length
         )
@@ -244,19 +248,19 @@ class Commands {
     }, timeout);
   }
 
-  static TYPE(c: net.Socket, args: [number, string][], store: DBStore) {
+  static TYPE(c: KServer, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     const value = store.get(key);
 
     if (!value) {
-      c.write(Parser.stringResponse("none"));
+      c.queueWrite(c, Parser.stringResponse("none"));
       return;
     }
 
-    c.write(Parser.stringResponse(value.type));
+    c.queueWrite(c, Parser.stringResponse(value.type));
   }
 
-  static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
+  static XADD(c: KServer, args: [number, string][], store: DBStore) {
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
     const exist = store.get(streamKey) as StreamDBItem | undefined;
@@ -283,11 +287,11 @@ class Commands {
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
       if (totalTime < 1) {
-        return c.write(Parser.errorResponse(tooSmallMsg));
+        return c.queueWrite(c, Parser.errorResponse(tooSmallMsg));
       }
 
       if (!compareStreamTime(latestEntryId, time)) {
-        return c.write(Parser.errorResponse(errMsg));
+        return c.queueWrite(c, Parser.errorResponse(errMsg));
       }
 
       if (exist) {
@@ -295,23 +299,23 @@ class Commands {
         const biggestID = streamBiggestId(exist);
 
         if (biggestID === time) {
-          return c.write(Parser.errorResponse(errMsg));
+          return c.queueWrite(c, Parser.errorResponse(errMsg));
         }
 
         if (!compareStreamTime(biggestID, time)) {
-          return c.write(Parser.errorResponse(errMsg));
+          return c.queueWrite(c, Parser.errorResponse(errMsg));
         }
       }
 
       latestEntryId = time;
       entries[key] = item;
-      c.write(Parser.stringResponse(time));
+      c.queueWrite(c, Parser.stringResponse(time));
     }
 
     store.setStream(streamKey, entries, "stream");
   }
 
-  static XRANGE(c: net.Socket, args: [number, string][], store: DBStore) {
+  static XRANGE(c: KServer, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     const start = args[1][1];
     const end = args[2][1];
@@ -319,7 +323,7 @@ class Commands {
     const stream = store.get(key) as StreamDBItem | undefined;
 
     if (!stream) {
-      return c.write(Parser.listResponse([]));
+      return c.queueWrite(c, Parser.listResponse([]));
     }
 
     const ids = stream.entries.map((e) => e[0]);
@@ -327,20 +331,20 @@ class Commands {
     const endId = end === "+" ? ids.length - 1 : ids.indexOf(end);
 
     if (startId === -1 || endId === -1) {
-      return c.write(Parser.listResponse([]));
+      return c.queueWrite(c, Parser.listResponse([]));
     }
 
     if (startId > endId) {
-      return c.write(Parser.listResponse([]));
+      return c.queueWrite(c, Parser.listResponse([]));
     }
 
     const data = stream.entries.slice(startId, endId + 1);
     stream.entries = data;
 
-    c.write(Parser.streamItemResponse(stream));
+    c.queueWrite(c, Parser.streamItemResponse(stream));
   }
 
-  static async XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
+  static async XREAD(c: KServer, args: [number, string][], store: DBStore) {
     console.log(args);
     const reads: StreamDBItem[] = [];
     let block: number = -1;
@@ -368,7 +372,7 @@ class Commands {
             return;
           }
 
-          c.write(Parser.streamXResponse(data));
+          c.queueWrite(c, Parser.streamXResponse(data));
         };
 
         store.addStreamListener(streamKey, block, listener);
@@ -382,14 +386,14 @@ class Commands {
           if (closed) return;
 
           if (!didread) {
-            c.write(Parser.nilResponse());
+            c.queueWrite(c, Parser.nilResponse());
           }
         }, block);
 
         await sleep(block);
 
         if (!didread) {
-          c.write(Parser.nilResponse());
+          c.queueWrite(c, Parser.nilResponse());
         }
 
         return;
@@ -415,7 +419,7 @@ class Commands {
 
       await readOne(streamKey, id);
       if (reads.length > 0 && !closed)
-        c.write(Parser.streamXResponse(reads[0]));
+        c.queueWrite(c, Parser.streamXResponse(reads[0]));
       return;
     }
 
@@ -435,26 +439,28 @@ class Commands {
     if (reads.length < 1 || closed) return;
 
     const res = Parser.streamMultiXResponse(streams, reads);
-    c.write(res);
+    c.queueWrite(c, res);
   }
 
-  static INCR(c: net.Socket, args: [number, string][], store: DBStore) {
+  static INCR(c: KServer, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     const value = store.increment(key);
 
     if (value === null) {
-      return c.write(Parser.errorResponse("ERR value is not an integer or out of range"));
+      return c.queueWrite(c, Parser.errorResponse("ERR value is not an integer or out of range"));
     }
 
-    c.write(Parser.numberResponse(value));
+    c.queueWrite(c, Parser.numberResponse(value));
   }
 
-  static MULTI(c: net.Socket, args: [number, string][], store: DBStore) {
-    c.write(Parser.okResponse());
+  static MULTI(c: KServer, args: [number, string][], store: DBStore) {
+    c.queueWrite(c, Parser.okResponse());
   }
 
-  static EXEC(c: net.Socket, args: [number, string][], store: DBStore) {
-    c.write(Parser.errorResponse("ERR EXEC without MULTI"));
+  static EXEC(c: KServer, args: [number, string][], store: DBStore) {
+    if (!store.locked) {
+      return c.write(Parser.errorResponse("ERR EXEC without MULTI"));
+    }
   }
 }
 

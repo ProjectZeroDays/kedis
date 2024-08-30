@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { commands } from "./utils/commands";
 import getBytes from "./utils/get-bytes";
+import { KServer } from "./k-server";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -55,6 +56,11 @@ export default class DBStore {
   private connectMaster() {
     const master = this.master!;
     const socket = new net.Socket();
+    const kserver = this as any as KServer;
+    kserver.queueWrite = (c: net.Socket | KServer, data: string | Uint8Array) => {
+      c.write(data);
+    }
+
     socket.connect(master.port, master.host);
     let step = 0;
     let loadedFile: boolean = false;
@@ -93,7 +99,7 @@ export default class DBStore {
 
         const func = commands[command];
         if (func) {
-          func(socket, params, this, data);
+          func(kserver, params, this, data);
           console.log("txt:", txt);
           this.offset += getBytes(txt);
         }
