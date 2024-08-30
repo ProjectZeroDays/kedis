@@ -11,7 +11,7 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
   }
 
   if (b === "*") {
-    b = String(parseInt(b) + 1);
+    b = String(parseInt(d) + 1);
   }
 
   const newId = `${a}-${b}`;
