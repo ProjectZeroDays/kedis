@@ -333,6 +333,7 @@ class Commands {
     }
 
     const data = stream.entries.slice(startId, endId + 1);
+    stream.entries = data;
 
     c.write(Parser.streamItemResponse(stream));
   }

@@ -42,10 +42,6 @@ export default class Parser {
 
   static fileResponse(path: string) {
     const contents = fs.readFileSync(path).toString();
-
-    // log the base64 value of contents:
-    console.log(Buffer.from(contents).toString("base64"));
-
     return `$${contents.length}\r\n${contents}`;
   }
 
@@ -62,7 +58,6 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
-    item.entries.map(e => console.log(e));
     const res = encodeXRangeResponse(item.entries);
     return res;
   }
