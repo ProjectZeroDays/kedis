@@ -18,6 +18,7 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
   }
 
   const newId = `${a}-${b}`;
+  console.log("newId", newId);
 
   if (newId === "0-0") return "0-1";
 
