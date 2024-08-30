@@ -123,7 +123,7 @@ export default class Parser {
 
     command = command.toUpperCase() as Command;
 
-    if (["GET", "SET", "ECHO", "PING", "TYPE", "XRANGE"].includes(command)) {
+    if (["GET", "SET", "ECHO", "PING", "TYPE"].includes(command)) {
       for (const p of params) {
         if (p.startsWith("$") && lastUnique) continue;
 
@@ -157,7 +157,7 @@ export default class Parser {
     }
 
     if (
-      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF"].includes(command)
+      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE"].includes(command)
     ) {
       for (const p of params) {
         if (p.startsWith("$")) continue;

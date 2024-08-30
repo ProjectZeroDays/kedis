@@ -3,7 +3,6 @@ import { commands } from "./utils/commands";
 import Parser from "./utils/parser";
 import DBStore from "./db-store";
 import readConfig from "./utils/read-config";
-import getBytes from "./utils/get-bytes";
 
 const config = readConfig();
 
