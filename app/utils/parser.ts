@@ -111,6 +111,7 @@ export default class Parser {
 
   static parse(data: Buffer) {
     const args = Parser.getArgs(data);
+    console.log(args);
     const slicedParams: [number, string][] = [];
     let tempLength = 0;
     let lastUnique: false | string = false;
