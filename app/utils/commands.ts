@@ -379,6 +379,7 @@ class Commands {
     }
 
     console.log("read length:", reads.length);
+    console.log("reads", reads);
     c.write(`*${reads.length}\r\n${reads.join("")}`);
   }
 }
