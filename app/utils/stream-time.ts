@@ -1,11 +1,9 @@
 export default function streamTime(id: string, item: StreamDBItem | undefined) {
   if (!id.includes("*")) return id;
 
-  let [a, b] = id.split("-");
+  if (id === "*") return autoStreamId(item);
 
-  const existId = streamBiggestId(item);
-  console.log("id", id, [a, b]);
-  console.log("existId", existId);
+  let [a, b] = id.split("-");
 
   if (a === "*") {
     const [c, d] = streamBiggestIdByA(item).split("-");
@@ -14,7 +12,6 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
 
   if (b === "*") {
     const [c, d] = streamBiggestIdByB(item, parseInt(a)).split("-");
-    console.log("biggestB", [c, d]);
 
     if (`${c}-${d}` === "0-0") {
       b = d;
@@ -24,11 +21,16 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
   }
 
   const newId = `${a}-${b}`;
-  console.log("newId", newId);
-
   if (newId === "0-0") return "0-1";
 
   return newId;
+}
+
+export function autoStreamId(item: StreamDBItem | undefined) {
+    const biggestId = streamBiggestId(item);
+    const [a, b] = biggestId.split("-");
+    const newId = `${a}-${String(parseInt(b) + 1)}`;
+    return newId;
 }
 
 // a is the key to be compared to, so its the latest item entry
