@@ -343,7 +343,6 @@ class Commands {
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
-      console.log("Called one with:", streamKey, id);
 
       if (!stream) {
         console.log("Stream not found");
@@ -353,7 +352,6 @@ class Commands {
       const ids = stream.entries.map((e) => e[0]);
       const startId = ids.indexOf(id);
 
-      console.log("Read stream:", stream.entries);
       return reads.push(Parser.streamXResponse(stream));
     }
 
@@ -378,9 +376,10 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    console.log("read length:", reads.length);
-    console.log("reads", reads);
-    c.write(`*${reads.length}\r\n${reads.join("")}`);
+    const res = `*${reads.length}\r\n${reads.join("")}`;
+    console.log("res", res);
+
+    c.write(res);
   }
 }
 
