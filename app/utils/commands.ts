@@ -339,34 +339,36 @@ class Commands {
 
   static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
+    const reads: string[] = [];
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
 
       if (!stream) {
-        return c.write(Parser.listResponse([]));
+        return reads.push(Parser.listResponse([]));
       }
 
       const ids = stream.entries.map((e) => e[0]);
       const startId = ids.indexOf(id);
 
       if (id === "0-0") {
-        return c.write(Parser.streamXResponse(stream));
+        return reads.push(Parser.streamXResponse(stream));
       }
 
       if (startId !== -1) {
-        const data = stream.entries;
+        const data = stream.entries.slice(startId);
         stream.entries = data;
       }
 
-      return c.write(Parser.streamXResponse(stream));
+      return reads.push(Parser.streamXResponse(stream));
     }
 
     if (args.length === 2) {
       const streamKey = args[0][1];
       const id = args[1][1];
 
-      return readOne(streamKey, id);
+      readOne(streamKey, id);
+      return c.write(reads[0]);
     }
 
     if (args.length < 2) return;
@@ -381,6 +383,8 @@ class Commands {
     for (let i = 0; i < streams.length; i++) {
       readOne(streams[i], streamIds[i]);
     }
+
+    c.write(Parser.listResponse(reads));
   }
 }
 
