@@ -384,6 +384,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
+    console.log(reads);
     c.write(`*${reads.length}\r\n${reads.join("")}`);
   }
 }
