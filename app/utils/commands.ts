@@ -268,6 +268,8 @@ class Commands {
 
       const itemTime = id.split("-").map(i => parseInt(i));
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
+      console.log("latestEntryTime", latestEntryTime);
+      console.log("itemTime", itemTime);
 
       if (totalTime < 1) {
         return;
