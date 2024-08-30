@@ -20,6 +20,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     console.log("NEW REQUEST");
 
     const parsed = Parser.parse(data);
+    console.log("parsed", parsed);
     if (!parsed) return;
 
     const { command, params } = parsed;

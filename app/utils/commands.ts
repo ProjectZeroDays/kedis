@@ -253,7 +253,6 @@ class Commands {
   }
 
   static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
-    console.log(args);
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
     let latestEntryId: string = "0-0";
