@@ -376,7 +376,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    const res = `*${reads.length}\r\n${reads.join("")}`;
+    const res = `*${reads.length}\r\n${reads.join("\r\n")}`;
     console.log("res", res);
 
     c.write(res);
