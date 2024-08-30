@@ -12,7 +12,8 @@ type Command =
   | "WAIT"
   | "TYPE"
   | "XADD"
-  | "XRANGE";
+  | "XRANGE"
+  | "XREAD";
 
 interface BaseDBItem {
   value: string | number;

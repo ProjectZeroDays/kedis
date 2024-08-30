@@ -1,7 +1,7 @@
 import fs from "fs";
 import { availableCommands, commands } from "./commands";
 
-function encodeXRangeResponse(data: [string, any][]): string {
+function XRangeResponse(data: StreamDBItem["entries"]): string {
   let response = `*${data.length}\r\n`;
 
   data.forEach(([id, entry]) => {
@@ -58,7 +58,7 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
-    const res = encodeXRangeResponse(item.entries);
+    const res = XRangeResponse(item.entries);
     return res;
   }
 
@@ -183,6 +183,14 @@ export default class Parser {
           slicedParams.push([0, p]);
         }
       });
+    }
+
+    if (command === "XREAD") {
+      params.forEach(p => {
+        if (p.startsWith("$") || p.length < 1 || p === "streams") return;
+
+        slicedParams.push([0, p]);
+      })
     }
 
     return {

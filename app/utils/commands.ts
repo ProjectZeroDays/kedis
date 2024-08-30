@@ -32,6 +32,7 @@ export const availableCommands: Command[] = [
   "TYPE",
   "XADD",
   "XRANGE",
+  "XREAD",
 ];
 
 class Commands {
@@ -337,6 +338,29 @@ class Commands {
 
     c.write(Parser.streamItemResponse(stream));
   }
+
+  static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
+    const streamKey = args[0][1];
+    const id = args[1][1];
+
+    const stream = store.get(streamKey) as StreamDBItem | undefined;
+
+    if (!stream) {
+      return c.write(Parser.listResponse([]));
+    }
+
+    const ids = stream.entries.map((e) => e[0]);
+    const startId = ids.indexOf(id);
+
+    if (startId === -1) {
+      return c.write(Parser.listResponse([]));
+    }
+
+    const data = stream.entries.slice(startId);
+    stream.entries = data;
+
+    c.write(Parser.streamItemResponse(stream));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -354,4 +378,5 @@ export const commands: Record<Command, CommandFunc> = {
   TYPE: Commands.TYPE,
   XADD: Commands.XADD,
   XRANGE: Commands.XRANGE,
+  XREAD: Commands.XREAD,
 };
