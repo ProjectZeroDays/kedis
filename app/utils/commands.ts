@@ -350,11 +350,12 @@ class Commands {
       args.shift();
     }
 
-    function readOne(streamKey: string, id: string, ignoreBlock: boolean = false) {
-      if (!ignoreBlock && block > 0) {
+    function readOne(streamKey: string, id: string) {
+      if (block > 0) {
         let didread: boolean = false;
         store.addStreamListener(streamKey, block, (data) => {
           didread = true;
+          c.write(Parser.streamXResponse(data));
           reads.push(data);
         });
 
