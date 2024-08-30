@@ -454,7 +454,8 @@ class Commands {
   }
 
   static MULTI(c: KServer, args: [number, string][], store: DBStore) {
-    c.queueWrite(c, Parser.okResponse());
+    c.queue.lock();
+    c.write(Parser.okResponse());
   }
 
   static EXEC(c: KServer, args: [number, string][], store: DBStore) {
