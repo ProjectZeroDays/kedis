@@ -160,6 +160,10 @@ export default class DBStore {
       });
 
       return;
+    } else {
+      Object.keys(value).forEach(element => {
+        entries.push([value[element].id, value[element]]);
+      });
     }
 
     const item: StreamDBItem = {
