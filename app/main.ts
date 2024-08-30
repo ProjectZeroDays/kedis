@@ -64,6 +64,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     }
 
     const results = c.queue.getResults();
+    console.log("results", results);
+
     c.write(Parser.listResponse(results, false));
     c.queue.flush();
   };

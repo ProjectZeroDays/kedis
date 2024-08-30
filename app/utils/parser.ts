@@ -129,6 +129,11 @@ export default class Parser {
   }
 
   static listResponse(list: any[], encodeString: boolean = true) {
+    if (list.length < 1) {
+      // return an empty list
+      return "*0\r\n";
+    }
+
     let res = `*${list.length}\r\n`;
 
     for (const item of list) {
