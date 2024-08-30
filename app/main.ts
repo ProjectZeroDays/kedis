@@ -59,10 +59,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   };
 
   kserver.executeQueued = async (c) => {
-    c.queue.unlock();
-
     for (const command of c.queue.queue) {
-      await execute(kserver, command);
+      await execute(kserver, command, true);
     }
 
     const results = c.queue.getResults();

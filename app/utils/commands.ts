@@ -464,7 +464,6 @@ class Commands {
     }
 
     c.executeQueued(c);
-    c.queue.unlock();
   }
 }
 
