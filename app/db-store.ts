@@ -151,7 +151,6 @@ export default class DBStore {
     value: Record<string, BaseDBItem>,
     type: StreamDBItem["type"] = "stream"
   ) {
-    console.log({ key, value, type });
     const existItem = this.data[key] as StreamDBItem | undefined;
     const entries: StreamDBItem["entries"] = [];
     const keyValue: [string, string | number][] = [];
@@ -170,6 +169,8 @@ export default class DBStore {
       this.data[key] = existItem;
       this.streamsBlocksTiming[key] = Date.now();
       this.executeListeners(key, {...existItem, entries: entries});
+
+      console.log(this.data);
 
       return;
     } else {
