@@ -13,7 +13,8 @@ type Command =
   | "TYPE"
   | "XADD"
   | "XRANGE"
-  | "XREAD";
+  | "XREAD"
+  | "INCR";
 
 interface BaseDBItem {
   value: string | number;

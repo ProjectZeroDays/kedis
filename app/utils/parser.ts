@@ -227,7 +227,7 @@ export default class Parser {
     }
 
     if (
-      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE"].includes(
+      ["CONFIG", "KEYS", "INFO", "PSYNC", "DEL", "REPLCONF", "XRANGE", "INCR"].includes(
         command
       )
     ) {

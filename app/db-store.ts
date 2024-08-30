@@ -146,6 +146,22 @@ export default class DBStore {
     this.data[key] = item;
   }
 
+  increment(key: string, value: number = 1) {
+    const item = this.get(key);
+
+    if (!item) {
+      this.set(key, value.toString());
+      return 1;
+    }
+
+    if (typeof item.value !== "number") {
+      return 0;
+    }
+
+    this.set(key, item.value + value.toString());
+    return item.value + value;
+  }
+
   setStream(
     key: string,
     value: Record<string, BaseDBItem>,

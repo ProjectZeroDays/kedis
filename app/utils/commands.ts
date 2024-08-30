@@ -437,6 +437,12 @@ class Commands {
     const res = Parser.streamMultiXResponse(streams, reads);
     c.write(res);
   }
+
+  static INCR(c: net.Socket, args: [number, string][], store: DBStore) {
+    const key = args[0][1];
+    const value = store.increment(key);
+    c.write(Parser.numberResponse(value));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -455,4 +461,5 @@ export const commands: Record<Command, CommandFunc> = {
   XADD: Commands.XADD,
   XRANGE: Commands.XRANGE,
   XREAD: Commands.XREAD,
+  INCR: Commands.INCR,
 };
