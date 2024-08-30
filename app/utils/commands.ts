@@ -441,6 +441,11 @@ class Commands {
   static INCR(c: net.Socket, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     const value = store.increment(key);
+
+    if (value === null) {
+      return c.write(Parser.nilResponse());
+    }
+
     c.write(Parser.numberResponse(value));
   }
 }

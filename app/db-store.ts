@@ -155,7 +155,7 @@ export default class DBStore {
     }
 
     if (typeof item.value !== "number") {
-      return 0;
+      return null;
     }
 
     this.set(key, (item.value + value).toString());
