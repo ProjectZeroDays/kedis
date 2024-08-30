@@ -255,6 +255,8 @@ class Commands {
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
     let latestEntryTime: number[] = [0, 0];
+    const errMsg =
+      "ERR The ID specified in XADD is equal or smaller than the target stream top item";
 
     for (let i = 1; i < args.length; i += 3) {
       const id = args[i][1];
@@ -271,13 +273,13 @@ class Commands {
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
       if (totalTime < 1) {
-        return c.write(Parser.nilResponse());
+        return c.write(Parser.errorResponse(errMsg));
       }
 
       if (
         !compareStreamTime(`${latestEntryTime[0]}-${latestEntryTime[1]}`, id)
       ) {
-        return c.write(Parser.nilResponse());
+        return c.write(Parser.errorResponse(errMsg));
       }
 
       const exist = store.get(streamKey) as StreamDBItem;
@@ -294,11 +296,11 @@ class Commands {
         });
 
         if (biggestID.id === id) {
-          return c.write(Parser.nilResponse());
+          return c.write(Parser.errorResponse(errMsg));
         }
 
         if (!compareStreamTime(biggestID.id, id)) {
-          return c.write(Parser.nilResponse());
+          return c.write(Parser.errorResponse(errMsg));
         }
       }
 
