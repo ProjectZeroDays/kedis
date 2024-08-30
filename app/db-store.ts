@@ -168,7 +168,7 @@ export default class DBStore {
 
       this.data[key] = existItem;
       this.streamsBlocksTiming[key] = Date.now();
-      this.executeListeners(key, existItem);
+      this.executeListeners(key, {...existItem, entries: entries});
 
       return;
     } else {
