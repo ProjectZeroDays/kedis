@@ -20,7 +20,8 @@ function XRangeResponse(data: StreamDBItem["entries"]): string {
 
 function xReadResponse(
   streamKey: string,
-  data: StreamDBItem["entries"]
+  data: StreamDBItem["entries"],
+  n: number = 1
 ): string {
   if (!data || !Array.isArray(data) || data.length === 0) {
     return Parser.nilResponse();
@@ -40,9 +41,24 @@ function xReadResponse(
     })
     .join("");
 
-  const result = `*1\r\n*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+  return `*${n}\r\n*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+}
 
-  return result;
+function xReadMultiResponse(
+  streamKeys: string[],
+  data: StreamDBItem["entries"][]
+): string {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return Parser.nilResponse();
+  }
+
+  let response = `*${data.length}\r\n`;
+
+  data.forEach((entries, index) => {
+    response += xReadResponse(streamKeys[index], entries, streamKeys.length);
+  });
+
+  return response;
 }
 
 export default class Parser {
@@ -94,13 +110,8 @@ export default class Parser {
     return res;
   }
 
-  static streamMultiXResponse(items: StreamDBItem[]) {
-    let res = `*${items.length}\r\n`;
-
-    items.forEach((item) => {
-      res += xReadResponse(item.streamKey, item.entries);
-    });
-
+  static streamMultiXResponse(streamKeys: string[], items: StreamDBItem[]) {
+    const res = xReadMultiResponse(streamKeys, items.map((i) => i.entries));
     return res;
   }
 
