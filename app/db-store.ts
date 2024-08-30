@@ -150,11 +150,15 @@ export default class DBStore {
     type: StreamDBItem["type"] = "stream",
   ) {
     const existItem = this.data[key] as StreamDBItem | undefined;
+    const entries: [string, BaseDBItem][] = [];
 
     if (existItem) {
       Object.keys(value).forEach(element => {
         existItem.value[element] = value[element];
+        existItem.entries.push([value[element].id, value[element]]);
+        entries.push([value[element].id, value[element]]);
       });
+
       return;
     }
 
@@ -163,10 +167,9 @@ export default class DBStore {
       type,
       itemType: "stream",
       streamKey: key,
+      entries,
     };
     this.data[key] = item;
-
-    console.log(this.data);
   }
 
   get(key: string) {

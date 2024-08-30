@@ -255,6 +255,9 @@ class Commands {
   static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
+    const exist = store.get(streamKey) as StreamDBItem | undefined;
+    const id = streamTime(args[1][1], exist);
+
     let latestEntryId: string = "0-0";
     const tooSmallMsg = "ERR The ID specified in XADD must be greater than 0-0";
     const errMsg =
@@ -263,8 +266,6 @@ class Commands {
     for (let i = 1; i < args.length; i += 3) {
       const key = args[i + 1][1];
       const value = args[i + 2][1];
-      const exist = store.get(streamKey) as StreamDBItem | undefined;
-      const id = streamTime(args[i][1], exist);
 
       const item: BaseDBItem = {
         value,

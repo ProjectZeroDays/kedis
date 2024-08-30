@@ -28,6 +28,7 @@ interface StreamDBItem {
   type: "stream";
   itemType: "stream";
   streamKey: string;
+  entries: [string, BaseDBItem][];
 }
 
 type DBItem = BaseDBItem | StreamDBItem;
