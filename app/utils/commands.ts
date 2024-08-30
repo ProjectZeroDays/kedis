@@ -358,10 +358,10 @@ class Commands {
         return reads.push(Parser.streamXResponse(stream));
       }
 
-      if (startId !== -1) {
-        const data = stream.entries;
-        stream.entries = data;
-      }
+      // if (startId !== -1) {
+      //   const data = stream.entries;
+      //   stream.entries = data;
+      // }
 
       return reads.push(Parser.streamXResponse(stream));
     }
