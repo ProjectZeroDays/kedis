@@ -62,6 +62,7 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
+    console.log(item.entries);
     const res = encodeXRangeResponse(item.entries);
     return res;
   }
