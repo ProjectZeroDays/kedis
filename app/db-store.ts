@@ -7,6 +7,7 @@ import fs from "fs";
 import { commands } from "./utils/commands";
 import getBytes from "./utils/get-bytes";
 import { KServer } from "./k-server";
+import buildKServer from "./utils/build-kserver";
 
 export default class DBStore {
   data: Record<string, DBItem> = {};
@@ -56,7 +57,7 @@ export default class DBStore {
   private connectMaster() {
     const master = this.master!;
     const socket = new net.Socket();
-    const kserver = this as any as KServer;
+    const kserver = buildKServer(socket, this);
     kserver.queueWrite = (c: net.Socket | KServer, data: string | Uint8Array) => {
       c.write(data);
     }

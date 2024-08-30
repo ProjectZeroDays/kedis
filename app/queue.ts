@@ -3,7 +3,7 @@ import { KServer } from "./k-server";
 export default class Queue {
   connection: KServer;
   locked: boolean = false;
-  queue: (Buffer)[] = [];
+  queue: Buffer[] = [];
   results: (string | Uint8Array)[] = [];
 
   constructor(connection: KServer) {

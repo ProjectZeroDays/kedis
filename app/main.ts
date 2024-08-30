@@ -5,6 +5,8 @@ import DBStore from "./db-store";
 import readConfig from "./utils/read-config";
 import { KServer } from "./k-server";
 import Queue from "./queue";
+import execute from "./utils/execute-command";
+import buildKServer from "./utils/build-kserver";
 
 const config = readConfig();
 
@@ -17,60 +19,11 @@ const store = new DBStore(
   config.replicaof ? config.replicaof.split(" ")[0] : undefined
 );
 
-const queues: [KServer, Queue][] = [];
-
-const execute = async (kserver: KServer, data: Buffer, jump: boolean = false) => {
-  const parsed = Parser.parse(data);
-  if (!parsed) return;
-
-  if (kserver.queue.locked && !jump && parsed.command !== "EXEC") {
-    kserver.queueCommand(kserver, data);
-    return;
-  }
-
-  const { command, params } = parsed;
-
-  const func = commands[command];
-  if (!func) return;
-
-  await func(kserver, params, store, data);
-};
-
 const server: net.Server = net.createServer((connection: net.Socket) => {
-  const kserver = connection as any as KServer;
-
-  const queue = new Queue(kserver);
-  queues.push([kserver, queue]);
-
-  kserver.queue = queue;
-
-  kserver.queueWrite = (c: KServer, data: string | Uint8Array) => {
-    if (!c.queue.locked) {
-      c.write(data);
-      return;
-    }
-
-    c.queue.addResult(data);
-  };
-
-  kserver.queueCommand = (c: KServer, data: Buffer) => {
-    c.queue.add(data);
-  };
-
-  kserver.executeQueued = async (c) => {
-    for (const command of c.queue.queue) {
-      await execute(kserver, command, true);
-    }
-
-    const results = c.queue.getResults();
-    console.log("results", results);
-
-    c.write(Parser.listResponse(results, false));
-    c.queue.flush();
-  };
+  const kserver = buildKServer(connection, store);
 
   connection.on("data", (data: Buffer) => {
-    execute(kserver, data);
+    execute(kserver, data, store);
   });
 });
 
