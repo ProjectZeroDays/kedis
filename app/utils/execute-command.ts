@@ -12,7 +12,7 @@ const execute = async (
   const parsed = Parser.parse(data);
   if (!parsed) return;
 
-  if (kserver.queue.locked && !jump && parsed.command !== "EXEC") {
+  if (kserver.queue.locked && !jump && !["EXEC", "DISCARD"].includes(parsed.command)) {
     kserver.queueCommand(kserver, data);
     return;
   }
