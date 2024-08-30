@@ -165,6 +165,8 @@ export default class DBStore {
       streamKey: key,
     };
     this.data[key] = item;
+
+    console.log(this.data);
   }
 
   get(key: string) {
