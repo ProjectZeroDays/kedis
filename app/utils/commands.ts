@@ -343,9 +343,10 @@ class Commands {
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
+      console.log("Called one with:", streamKey, id);
 
       if (!stream) {
-        return reads.push(Parser.listResponse([]));
+        return;
       }
 
       const ids = stream.entries.map((e) => e[0]);
@@ -376,9 +377,6 @@ class Commands {
     const nStrams = Math.round(args.length/2);
     const keys = args.slice(0, nStrams);
     const ids = args.slice(nStrams);
-    console.log("nStrams", nStrams);
-    console.log("keys", keys);
-    console.log("ids", ids);
 
     const streams = keys.map((k) => k[1]);
     const streamIds = ids.map((i) => i[1]);
