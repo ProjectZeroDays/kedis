@@ -19,8 +19,8 @@ const store = new DBStore(
 
 const queues: [KServer, Queue][] = [];
 
-const execute = async (kserver: KServer, data: Buffer) => {
-  if (kserver.queue.locked) {
+const execute = async (kserver: KServer, data: Buffer, jump: boolean = false) => {
+  if (kserver.queue.locked && !jump) {
     kserver.queueCommand(kserver, data);
     return;
   }
@@ -59,6 +59,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   };
 
   kserver.executeQueued = async (c) => {
+    c.queue.unlock();
+
     for (const command of c.queue.queue) {
       await execute(kserver, command);
     }
