@@ -78,7 +78,9 @@ class Commands {
     }
 
     if (value.itemType === "stream") {
-      c.write(Parser.listResponse(value.value.map((v) => String(v.value))));
+      c.write(Parser.listResponse(
+        Object.keys(value.value).map(k => `${value.value[k].value}`)
+      ));
       return;
     }
 
@@ -247,6 +249,26 @@ class Commands {
 
   static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
+    const streamKey = args[0][1];
+    const entries: Record<string, BaseDBItem> = {};
+
+    for (let i = 1; i < args.length; i += 3) {
+      const id = args[i][1];
+      const key = args[i + 1][1];
+      const value = args[i + 2][1];
+      const item: BaseDBItem = {
+        value,
+        type: "string",
+        itemType: "base",
+        id
+      };
+
+      console.log(item);
+
+      entries[key] = item;
+    }
+
+    store.setStream(streamKey, entries, "stream");
   }
 }
 

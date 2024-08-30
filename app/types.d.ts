@@ -18,10 +18,11 @@ interface BaseDBItem {
   px?: Date;
   type: "string" | "number";
   itemType: "base";
+  id: string;
 }
 
 interface StreamDBItem {
-  value: BaseDBItem[];
+  value: Record<string, BaseDBItem>;
   px?: Date;
   type: "stream";
   itemType: "stream";
