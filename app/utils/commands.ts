@@ -342,6 +342,11 @@ class Commands {
     const reads: StreamDBItem[] = [];
     let block: number = 0;
 
+    if (args[0][1] === "--BLOCK--") {
+      block = args[0][0];
+      args.shift();
+    }
+
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
 
@@ -374,11 +379,6 @@ class Commands {
     const streamIds = ids.map((i) => i[1]);
 
     for (let i = 0; i < streams.length; i++) {
-      if (streams[i] === "block" && !isNaN(parseInt(streamIds[i]))) {
-        block = parseInt(streamIds[i]);
-        continue;
-      }
-
       readOne(streams[i], streamIds[i]);
     }
 

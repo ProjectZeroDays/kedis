@@ -179,7 +179,9 @@ export default class DBStore {
       streamKey: key,
       entries,
     };
+
     this.data[key] = item;
+    this.streamsBlocksTiming[key] = Date.now();
   }
 
   get(key: string) {

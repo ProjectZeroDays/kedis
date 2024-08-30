@@ -253,8 +253,23 @@ export default class Parser {
     }
 
     if (command === "XREAD") {
-      params.forEach((p) => {
-        if (p.startsWith("$") || p.length < 1 || p === "streams") return;
+      let latestIsBlock: boolean = false;
+      params.forEach((p, index) => {
+        if (p.startsWith("$") || p.length < 1 || p === "streams") {
+          latestIsBlock = false;
+          return;
+        };
+
+        if (latestIsBlock) {
+          latestIsBlock = false;
+          slicedParams.unshift([parseInt(p), "--BLOCK--"]);
+          return;
+        }
+
+        if (p === "block" && !isNaN(parseInt(params[index+1]))) {
+          latestIsBlock = true;
+          return;
+        }
 
         slicedParams.push([0, p]);
       });
