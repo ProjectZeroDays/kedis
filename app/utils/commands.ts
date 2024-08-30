@@ -260,10 +260,10 @@ class Commands {
       "ERR The ID specified in XADD is equal or smaller than the target stream top item";
 
     for (let i = 1; i < args.length; i += 3) {
-      const id = args[i][1];
       const key = args[i + 1][1];
       const value = args[i + 2][1];
       const exist = store.get(streamKey) as StreamDBItem | undefined;
+      const id = streamTime(args[i][1], exist);
 
       const item: BaseDBItem = {
         value,
@@ -272,7 +272,7 @@ class Commands {
         id,
       };
 
-      const time = streamTime(id, exist);
+      const time = id;
       const itemTime = time.split("-").map((i) => parseInt(i));
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
