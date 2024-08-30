@@ -263,9 +263,8 @@ class Commands {
         id
       };
 
-      console.log(item);
-
       entries[key] = item;
+      c.write(Parser.stringResponse(id));
     }
 
     store.setStream(streamKey, entries, "stream");
