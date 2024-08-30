@@ -344,16 +344,20 @@ class Commands {
     console.log(args);
     const reads: StreamDBItem[] = [];
     let block: number = 0;
-    const blocks: Record<string, number[]> = {};
 
     if (args[0][1] === "--BLOCK--") {
       block = args[0][0];
       args.shift();
     }
 
-    async function readOne(streamKey: string, id: string) {
-      if (block > 0) {
+    async function readOne(streamKey: string, id: string, ignoreBlock: boolean = false) {
+      if (!ignoreBlock && block > 0) {
+        store.addStreamListener(streamKey, block, (data) => {
+          readOne(streamKey, id, true);
+        });
+
         await sleep(block);
+        return;
       }
 
       const stream = store.get(streamKey) as StreamDBItem | undefined;

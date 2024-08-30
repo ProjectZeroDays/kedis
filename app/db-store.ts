@@ -22,7 +22,7 @@ export default class DBStore {
   locked: boolean = false;
   replicationOffset: number = 0;
   streamsBlocksTiming: Record<string, number> = {};
-  streamListeners: Record<string, [number, (data: Buffer) => void]> = {};
+  streamListeners: Record<string, [number, ((data: StreamDBItem) => void)][]> = {};
 
   constructor(
     role: "master" | "slave",
@@ -188,12 +188,18 @@ export default class DBStore {
   addStreamListener(
     key: string,
     time: number,
-    listener: (data: Buffer) => void
+    listener: (data: StreamDBItem) => void
   ) {
-    this.streamListeners[key] = [time, listener];
+    if (!this.streamListeners[key]) {
+      this.streamListeners[key] = [];
+    } else {
+      this.streamListeners[key].push([time, listener]);
+    }
 
     setTimeout(() => {
-      delete this.streamListeners[key];
+      this.streamListeners[key] = this.streamListeners[key].filter(
+        (l) => l[0] !== time
+      );
     }, time);
   }
 
