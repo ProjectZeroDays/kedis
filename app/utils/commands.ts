@@ -2,6 +2,7 @@ import * as net from "net";
 import Parser from "./parser";
 import DBStore from "../db-store";
 import getBytes from "./get-bytes";
+import compareStreamTime from "./compare-stream-time";
 
 type CommandFunc = (
   c: net.Socket,
@@ -266,26 +267,39 @@ class Commands {
         id,
       };
 
-      const itemTime = id.split("-").map(i => parseInt(i));
+      const itemTime = id.split("-").map((i) => parseInt(i));
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
       if (totalTime < 1) {
-        return;
+        return c.write(Parser.nilResponse());
       }
 
       if (
-        latestEntryTime[0] >= itemTime[0] &&
-        latestEntryTime[0] > 0
+        !compareStreamTime(`${latestEntryTime[0]}-${latestEntryTime[1]}`, id)
       ) {
-        return;
+        return c.write(Parser.nilResponse());
       }
 
       const exist = store.get(streamKey) as StreamDBItem;
-      
+
       if (exist) {
         // check if the most recent item in the exist time is equal or bigger than this
-        const times = Object.keys(exist.value).map(i => exist.value[i].id.split("-").map(i => parseInt(i)));
-        console.log("times", times);
+        const existValues = Object.keys(exist.value).map((i) => exist.value[i]);
+        const biggestID = existValues.reduce((a, b) => {
+          const aTime = a.id.split("-").map((i) => parseInt(i));
+          const bTime = b.id.split("-").map((i) => parseInt(i));
+          const aTotal = aTime.reduce((a, b) => a + b, 0);
+          const bTotal = bTime.reduce((a, b) => a + b, 0);
+          return aTotal > bTotal ? a : b;
+        });
+
+        if (biggestID.id === id) {
+          return c.write(Parser.nilResponse());
+        }
+
+        if (!compareStreamTime(biggestID.id, id)) {
+          return c.write(Parser.nilResponse());
+        }
       }
 
       latestEntryTime = itemTime;
