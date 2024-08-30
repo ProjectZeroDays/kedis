@@ -27,9 +27,17 @@ export default function streamTime(id: string, item: StreamDBItem | undefined) {
 }
 
 export function autoStreamId(item: StreamDBItem | undefined) {
-    const biggestId = streamBiggestId(item);
+    // get current Unix time as string: (The time part of the ID should be the current unix time in milliseconds, not seconds.)
+    const now = Date.now().toString();
+
+    const biggestId = streamBiggestIdByB(item, parseInt(now));
     const [a, b] = biggestId.split("-");
-    const newId = `${a}-${String(parseInt(b) + 1)}`;
+
+    if (biggestId === "0-0") {
+        return `${now}-0`;
+    }
+
+    const newId = `${now}-${String(parseInt(b) + 1)}`;
     return newId;
 }
 
