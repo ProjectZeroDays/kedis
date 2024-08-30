@@ -352,11 +352,17 @@ class Commands {
 
     async function readOne(streamKey: string, id: string, ignoreBlock: boolean = false) {
       if (!ignoreBlock && block > 0) {
+        let didread: boolean = false;
         store.addStreamListener(streamKey, block, (data) => {
-          readOne(streamKey, id, true);
+          didread = true;
+          reads.push(data);
         });
 
         await sleep(block);
+
+        if (!didread) {
+          c.write(Parser.nilResponse());
+        }
         return;
       }
 
