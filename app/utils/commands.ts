@@ -346,6 +346,7 @@ class Commands {
       console.log("Called one with:", streamKey, id);
 
       if (!stream) {
+        console.log("Stream not found");
         return;
       }
 
