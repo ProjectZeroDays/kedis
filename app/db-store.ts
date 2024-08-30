@@ -166,6 +166,10 @@ export default class DBStore {
         entries.push([value[element].id, keyValue]);
       });
 
+      this.data[key] = existItem;
+      this.streamsBlocksTiming[key] = Date.now();
+      this.executeListeners(key, existItem);
+
       return;
     } else {
       Object.keys(value).forEach((element) => {
@@ -183,6 +187,7 @@ export default class DBStore {
 
     this.data[key] = item;
     this.streamsBlocksTiming[key] = Date.now();
+    this.executeListeners(key, item);
   }
 
   addStreamListener(
