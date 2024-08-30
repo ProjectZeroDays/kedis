@@ -43,7 +43,7 @@ function xReadResponse(
 
   let res = `*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
 
-  if (n > 0) {
+  if (n === 0) {
     res = `*${n}\r\n${res}`;
   }
 
