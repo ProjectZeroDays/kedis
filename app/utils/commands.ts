@@ -352,21 +352,11 @@ class Commands {
     }
 
     async function readOne(streamKey: string, id: string) {
-      const stream = store.get(streamKey) as StreamDBItem | undefined;
-
-      if (!stream && block === 0) {        
-        return;
-      }
-
       if (block > 0) {
-        // store.addStreamListener(
-        //   streamKey,
-        //   block,
-        //   () => readOne(streamKey, id)
-        // );
         await sleep(block);
-        // return;
       }
+
+      const stream = store.get(streamKey) as StreamDBItem | undefined;
 
       if (!stream) return;
 
