@@ -148,12 +148,20 @@ export default class Parser {
     }
 
     if (command === "WAIT") {
-      slicedParams.push([parseInt(params[1]), "WAIT"], [parseInt(params[3]), ""]);
+      slicedParams.push(
+        [parseInt(params[1]), "WAIT"],
+        [parseInt(params[3]), ""]
+      );
     }
 
     if (command === "XADD") {
-      console.log("ARGS:", args);
-      console.log("PARAMS:", params);
+      params.forEach((p, index) => {
+        if (p.startsWith("$") || p.length < 1) return;
+
+        if (index % 2 === 1) {
+          slicedParams.push([0, p]);
+        }
+      });
     }
 
     return {
@@ -161,7 +169,7 @@ export default class Parser {
       commandLength,
       command: command as Command,
       params: slicedParams,
-      txt: data.toString()
+      txt: data.toString(),
     };
   }
 }

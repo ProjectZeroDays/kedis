@@ -13,8 +13,18 @@ type Command =
   | "TYPE"
   | "XADD";
 
-interface DBItem {
+interface BaseDBItem {
   value: string | number;
   px?: Date;
-  type: "string" | "number" | "stream";
+  type: "string" | "number";
+  itemType: "base";
 }
+
+interface StreamDBItem {
+  value: BaseDBItem[];
+  px?: Date;
+  type: "stream";
+  itemType: "stream";
+}
+
+type DBItem = BaseDBItem | StreamDBItem;

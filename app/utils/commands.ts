@@ -28,7 +28,7 @@ export const availableCommands: Command[] = [
   "REPLCONF",
   "PSYNC",
   "WAIT",
-  "TYPE"
+  "TYPE",
 ];
 
 class Commands {
@@ -74,6 +74,11 @@ class Commands {
 
     if (!value) {
       c.write(Parser.nilResponse());
+      return;
+    }
+
+    if (value.itemType === "stream") {
+      c.write(Parser.listResponse(value.value.map((v) => String(v.value))));
       return;
     }
 
@@ -241,7 +246,7 @@ class Commands {
   }
 
   static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
-
+    console.log(args);
   }
 }
 
@@ -258,5 +263,5 @@ export const commands: Record<Command, CommandFunc> = {
   PSYNC: Commands.PSYNC,
   WAIT: Commands.WAIT,
   TYPE: Commands.TYPE,
-  XADD: Commands.XADD
+  XADD: Commands.XADD,
 };

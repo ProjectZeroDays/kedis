@@ -125,15 +125,28 @@ export default class DBStore {
     key: string,
     value: string,
     px: number | undefined = undefined,
-    type: DBItem["type"] = "string"
+    type: BaseDBItem["type"] = "string"
   ) {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
       : undefined;
     const typedValue = !isNaN(parseInt(value)) ? Number(value) : value;
 
-    this.data[key] = { value: typedValue, px: expiration, type };
-    // this.pushToReplicas(raw);
+    const item: BaseDBItem = { value: typedValue, px: expiration, type, itemType: "base" };
+
+    this.data[key] = item;
+  }
+
+  setStream(key: string, value: BaseDBItem[], type: StreamDBItem["type"] = "stream") {
+    const existItem = this.data[key] as StreamDBItem | undefined;
+
+    if (existItem) {
+      existItem.value.push(...value);
+      return;
+    }
+
+    const item: StreamDBItem = { value, type, itemType: "stream" };
+    this.data[key] = item;
   }
 
   get(key: string) {
