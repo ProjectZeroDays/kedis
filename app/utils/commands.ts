@@ -376,6 +376,9 @@ class Commands {
     const nStrams = Math.round(args.length/2);
     const keys = args.slice(0, nStrams);
     const ids = args.slice(nStrams);
+    console.log("nStrams", nStrams);
+    console.log("keys", keys);
+    console.log("ids", ids);
 
     const streams = keys.map((k) => k[1]);
     const streamIds = ids.map((i) => i[1]);
@@ -384,7 +387,6 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    console.log(reads);
     c.write(`*${reads.length}\r\n${reads.join("")}`);
   }
 }
