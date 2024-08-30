@@ -30,6 +30,8 @@ export const availableCommands: Command[] = [
   "PSYNC",
   "WAIT",
   "TYPE",
+  "XADD",
+  "XRANGE",
 ];
 
 class Commands {
