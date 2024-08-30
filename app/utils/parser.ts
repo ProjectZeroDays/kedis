@@ -94,14 +94,32 @@ export default class Parser {
     return res;
   }
 
+  static streamMultiXResponse(items: StreamDBItem[]) {
+    let res = `*${items.length}\r\n`;
+
+    items.forEach((item) => {
+      res += xReadResponse(item.streamKey, item.entries);
+    });
+
+    return res;
+  }
+
   static errorResponse(txt: string) {
     return `-${txt}\r\n`;
   }
 
-  static listResponse(list: string[]) {
-    const values = list.map((l) => Parser.dynamicResponse(l));
+  static listResponse(list: any[]) {
+    let res = `*${list.length}\r\n`;
 
-    return `*${list.length}\r\n${values.join("")}`;
+    for (const item of list) {
+      if (Array.isArray(item)) {
+        res += Parser.listResponse(item);
+      } else {
+        res += Parser.stringResponse(String(item));
+      }
+    }
+
+    return res;
   }
 
   static okResponse() {
