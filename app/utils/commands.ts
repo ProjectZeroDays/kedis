@@ -2,7 +2,7 @@ import * as net from "net";
 import Parser from "./parser";
 import DBStore from "../db-store";
 import getBytes from "./get-bytes";
-import compareStreamTime from "./compare-stream-time";
+import streamTime, { streamBiggestId, compareStreamTime } from "./stream-time";
 
 type CommandFunc = (
   c: net.Socket,
@@ -254,7 +254,7 @@ class Commands {
     console.log(args);
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
-    let latestEntryTime: number[] = [0, 0];
+    let latestEntryId: string = "0-0";
     const tooSmallMsg = "ERR The ID specified in XADD must be greater than 0-0";
     const errMsg =
       "ERR The ID specified in XADD is equal or smaller than the target stream top item";
@@ -263,6 +263,8 @@ class Commands {
       const id = args[i][1];
       const key = args[i + 1][1];
       const value = args[i + 2][1];
+      const exist = store.get(streamKey) as StreamDBItem | undefined;
+
       const item: BaseDBItem = {
         value,
         type: "string",
@@ -270,7 +272,8 @@ class Commands {
         id,
       };
 
-      const itemTime = id.split("-").map((i) => parseInt(i));
+      const time = streamTime(id, exist);
+      const itemTime = time.split("-").map((i) => parseInt(i));
       const totalTime = itemTime.reduce((a, b) => a + b, 0);
 
       if (totalTime < 1) {
@@ -278,36 +281,27 @@ class Commands {
       }
 
       if (
-        !compareStreamTime(`${latestEntryTime[0]}-${latestEntryTime[1]}`, id)
+        !compareStreamTime(latestEntryId, time)
       ) {
         return c.write(Parser.errorResponse(errMsg));
       }
 
-      const exist = store.get(streamKey) as StreamDBItem;
-
       if (exist) {
         // check if the most recent item in the exist time is equal or bigger than this
-        const existValues = Object.keys(exist.value).map((i) => exist.value[i]);
-        const biggestID = existValues.reduce((a, b) => {
-          const aTime = a.id.split("-").map((i) => parseInt(i));
-          const bTime = b.id.split("-").map((i) => parseInt(i));
-          const aTotal = aTime.reduce((a, b) => a + b, 0);
-          const bTotal = bTime.reduce((a, b) => a + b, 0);
-          return aTotal > bTotal ? a : b;
-        });
+        const biggestID = streamBiggestId(exist);
 
-        if (biggestID.id === id) {
+        if (biggestID === time) {
           return c.write(Parser.errorResponse(errMsg));
         }
 
-        if (!compareStreamTime(biggestID.id, id)) {
+        if (!compareStreamTime(biggestID, time)) {
           return c.write(Parser.errorResponse(errMsg));
         }
       }
 
-      latestEntryTime = itemTime;
+      latestEntryId = time;
       entries[key] = item;
-      c.write(Parser.stringResponse(id));
+      c.write(Parser.stringResponse(time));
     }
 
     store.setStream(streamKey, entries, "stream");
