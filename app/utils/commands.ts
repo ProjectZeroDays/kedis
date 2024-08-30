@@ -358,14 +358,14 @@ class Commands {
         return;
       }
 
-      if (!stream && block > 0) {
-        store.addStreamListener(
-          streamKey,
-          block,
-          () => readOne(streamKey, id)
-        );
+      if (block > 0) {
+        // store.addStreamListener(
+        //   streamKey,
+        //   block,
+        //   () => readOne(streamKey, id)
+        // );
         await sleep(block);
-        return;
+        // return;
       }
 
       if (!stream) return;
