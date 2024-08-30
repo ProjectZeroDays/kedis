@@ -360,7 +360,7 @@ class Commands {
       const id = args[1][1];
 
       readOne(streamKey, id);
-      return c.write(`*1\r\n${Parser.streamXResponse(reads[0])}`);
+      return c.write(Parser.streamXResponse(reads[0]));
     }
 
     if (args.length < 2) return;

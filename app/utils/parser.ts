@@ -21,7 +21,7 @@ function XRangeResponse(data: StreamDBItem["entries"]): string {
 function xReadResponse(
   streamKey: string,
   data: StreamDBItem["entries"],
-  n: number = 1
+  n: number
 ): string {
   if (!data || !Array.isArray(data) || data.length === 0) {
     return Parser.nilResponse();
@@ -41,7 +41,13 @@ function xReadResponse(
     })
     .join("");
 
-  return `*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+  let res = `*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+
+  if (n > 0) {
+    res = `*${n}\r\n${res}`;
+  }
+
+  return res;
 }
 
 function xReadMultiResponse(
@@ -106,7 +112,7 @@ export default class Parser {
   }
 
   static streamXResponse(item: StreamDBItem) {
-    const res = xReadResponse(item.streamKey, item.entries);
+    const res = xReadResponse(item.streamKey, item.entries, 0);
     return res;
   }
 
