@@ -384,7 +384,7 @@ class Commands {
       readOne(streams[i], streamIds[i]);
     }
 
-    c.write(Parser.listResponse(reads));
+    c.write(reads.join(""));
   }
 }
 
