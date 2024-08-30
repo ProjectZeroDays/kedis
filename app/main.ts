@@ -19,7 +19,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (data: Buffer) => {
 
     const parsed = Parser.parse(data);
-    console.log("parsed", parsed);
+    // console.log("parsed", parsed);
     if (!parsed) return;
 
     const { command, params } = parsed;
