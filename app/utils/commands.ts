@@ -336,7 +336,10 @@ class Commands {
       )
     );
 
-    return c.write(Parser.streamItemResponse(stream));
+    const res = Parser.streamItemResponse(stream)
+    console.log("res", res);
+
+    return c.write(res);
   }
 }
 
