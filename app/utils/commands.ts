@@ -366,6 +366,7 @@ class Commands {
       const id = args[1][1];
 
       readOne(streamKey, id);
+      console.log("Block:", block);
       return c.write(Parser.streamXResponse(reads[0]));
     }
 
