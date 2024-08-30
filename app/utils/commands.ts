@@ -326,10 +326,6 @@ class Commands {
       )
     );
 
-    if (end === "+") {
-      return c.write(Parser.streamItemResponse(stream));
-    }
-
     stream.value = Object.fromEntries(
       Object.entries(stream.value).slice(
         0,

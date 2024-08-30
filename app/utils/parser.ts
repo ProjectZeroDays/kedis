@@ -1,6 +1,23 @@
 import fs from "fs";
 import { availableCommands, commands } from "./commands";
 
+function encodeXRangeResponse(data: [string, any][]): string {
+  let response = `*${data.length}\r\n`;
+
+  data.forEach(([id, entry]) => {
+    response += `*2\r\n$${id.length}\r\n${id}\r\n`;
+
+    const entryArray: any[] = Object.entries(entry).flat();
+    response += `*${entryArray.length}\r\n`;
+
+    for (const item of entryArray) {
+      response += `$${item.length}\r\n${item}\r\n`;
+    }
+  });
+
+  return response;
+}
+
 export default class Parser {
   static getArgs(data: Buffer) {
     const args = data.toString().split(`\r\n`);
@@ -45,19 +62,8 @@ export default class Parser {
   }
 
   static streamItemResponse(item: StreamDBItem) {
-    const entries: string[] = [];
-    let latestId = "";
-
-    item.entries.forEach((e) => {
-      const [id, value] = e;
-      entries.push(Parser.listResponse([
-        Parser.stringResponse(id),
-        Parser.listResponse(value.map((v) => String(v[1]))),
-      ]));
-      latestId = id;
-    });
-
-    return Parser.listResponse(entries);
+    const res = encodeXRangeResponse(item.entries);
+    return res;
   }
 
   static errorResponse(txt: string) {
