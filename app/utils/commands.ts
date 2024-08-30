@@ -343,22 +343,43 @@ class Commands {
   static async XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
     const reads: StreamDBItem[] = [];
-    let block: number = 0;
+    let block: number = -1;
+    let closed: boolean = false;
+
+    c.addListener("close", () => (closed = true));
 
     if (args[0][1] === "--BLOCK--") {
       block = args[0][0];
       args.shift();
     }
 
-    async function readOne(streamKey: string, id: string, ignoreBlock: boolean = false) {
-      if (!ignoreBlock && block > 0) {
+    async function readOne(
+      streamKey: string,
+      id: string,
+    ) {
+      if (block > -1) {
         let didread: boolean = false;
-        store.addStreamListener(streamKey, block, (data) => {
+
+        const listener = (data: StreamDBItem) => {
           didread = true;
-          reads.push(data);
+          if (block > 0) {
+            reads.push(data);
+            return;
+          }
+
+          c.write(Parser.streamXResponse(data));
+        };
+
+        store.addStreamListener(streamKey, block, listener);
+        c.addListener("close", () => {
+          store.deleteStreamListener(streamKey, listener);
         });
 
+        if (closed || block === 0) return;
+
         setTimeout(() => {
+          if (closed) return;
+
           if (!didread) {
             c.write(Parser.nilResponse());
           }
@@ -374,8 +395,6 @@ class Commands {
       }
 
       const stream = store.get(streamKey) as StreamDBItem | undefined;
-
-      // slice stream entries from startId
       if (!stream) return;
 
       const ids = stream.entries.map((e) => e[0]);
@@ -394,13 +413,14 @@ class Commands {
       const id = args[1][1];
 
       await readOne(streamKey, id);
-      if (reads.length > 0) c.write(Parser.streamXResponse(reads[0]));
+      if (reads.length > 0 && !closed)
+        c.write(Parser.streamXResponse(reads[0]));
       return;
     }
 
     if (args.length < 2) return;
 
-    const nStrams = Math.round(args.length/2);
+    const nStrams = Math.round(args.length / 2);
     const keys = args.slice(0, nStrams);
     const ids = args.slice(nStrams);
 
@@ -411,7 +431,7 @@ class Commands {
       await readOne(streams[i], streamIds[i]);
     }
 
-    if (reads.length < 1) return;
+    if (reads.length < 1 || closed) return;
 
     const res = Parser.streamMultiXResponse(streams, reads);
     c.write(res);

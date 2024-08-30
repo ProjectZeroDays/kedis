@@ -201,6 +201,8 @@ export default class DBStore {
 
     this.streamListeners[key].push([time, listener]);
 
+    if (time === 0) return;
+
     setTimeout(() => {
       this.streamListeners[key] = this.streamListeners[key].filter(
         (l) => l[0] !== time
@@ -222,7 +224,13 @@ export default class DBStore {
     return this.streamListeners[key];
   }
 
-  deleteStreamListener(key: string) {
+  deleteStreamListener(key: string, listener: (data: StreamDBItem) => void) {
+    this.streamListeners[key] = this.streamListeners[key].filter(
+      (l) => l[1] !== listener
+    );
+  }
+
+  deleteStreamListeners(key: string) {
     delete this.streamListeners[key];
   }
 
