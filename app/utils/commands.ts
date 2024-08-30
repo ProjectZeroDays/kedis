@@ -343,7 +343,6 @@ class Commands {
 
     function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
-      console.log("stream", stream);
 
       if (!stream) {
         return reads.push(Parser.listResponse([]));
@@ -357,7 +356,7 @@ class Commands {
       }
 
       if (startId !== -1) {
-        const data = stream.entries.slice(startId);
+        const data = stream.entries.slice(startId-1);
         stream.entries = data;
       }
 
