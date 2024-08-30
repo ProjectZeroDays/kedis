@@ -17,6 +17,9 @@ const EMPTY_RDB = Buffer.from(
   "hex"
 );
 
+// sleep function:
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export const availableCommands: Command[] = [
   "PING",
   "ECHO",
@@ -337,19 +340,19 @@ class Commands {
     c.write(Parser.streamItemResponse(stream));
   }
 
-  static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
+  static async XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
     console.log(args);
     const reads: StreamDBItem[] = [];
     let block: number = 0;
+    const blocks: Record<string, number[]> = {};
 
     if (args[0][1] === "--BLOCK--") {
       block = args[0][0];
       args.shift();
     }
 
-    function readOne(streamKey: string, id: string) {
+    async function readOne(streamKey: string, id: string) {
       const stream = store.get(streamKey) as StreamDBItem | undefined;
-      const latestStream = store.streamsBlocksTiming[streamKey];
 
       if (!stream && block === 0) {        
         return;
@@ -361,6 +364,7 @@ class Commands {
           block,
           () => readOne(streamKey, id)
         );
+        await sleep(block);
         return;
       }
 
@@ -373,7 +377,7 @@ class Commands {
       const streamKey = args[0][1];
       const id = args[1][1];
 
-      readOne(streamKey, id);
+      await readOne(streamKey, id);
       if (reads.length > 0) c.write(Parser.streamXResponse(reads[0]));
       return;
     }
@@ -388,7 +392,7 @@ class Commands {
     const streamIds = ids.map((i) => i[1]);
 
     for (let i = 0; i < streams.length; i++) {
-      readOne(streams[i], streamIds[i]);
+      await readOne(streams[i], streamIds[i]);
     }
 
     if (reads.length < 1) return;
