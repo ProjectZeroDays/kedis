@@ -283,9 +283,7 @@ class Commands {
         return c.write(Parser.errorResponse(tooSmallMsg));
       }
 
-      if (
-        !compareStreamTime(latestEntryId, time)
-      ) {
+      if (!compareStreamTime(latestEntryId, time)) {
         return c.write(Parser.errorResponse(errMsg));
       }
 
@@ -340,30 +338,47 @@ class Commands {
   }
 
   static XREAD(c: net.Socket, args: [number, string][], store: DBStore) {
-    const streamKey = args[0][1];
-    const id = args[1][1];
+    function readOne(streamKey: string, id: string) {
+      const stream = store.get(streamKey) as StreamDBItem | undefined;
 
-    const stream = store.get(streamKey) as StreamDBItem | undefined;
+      if (!stream) {
+        return c.write(Parser.listResponse([]));
+      }
 
-    if (!stream) {
-      return c.write(Parser.listResponse([]));
-    }
+      const ids = stream.entries.map((e) => e[0]);
+      const startId = ids.indexOf(id);
 
-    const ids = stream.entries.map((e) => e[0]);
-    const startId = ids.indexOf(id);
+      if (id === "0-0") {
+        return c.write(Parser.streamXResponse(stream));
+      }
 
-    if (id === "0-0") {
+      if (startId !== -1) {
+        const data = stream.entries.slice(startId);
+        stream.entries = data;
+      }
+
       return c.write(Parser.streamXResponse(stream));
     }
 
-    if (startId === -1) {
-      return c.write(Parser.streamXResponse(stream));
+    if (args.length === 2) {
+      const streamKey = args[0][1];
+      const id = args[1][1];
+
+      return readOne(streamKey, id);
     }
 
-    const data = stream.entries.slice(startId);
-    stream.entries = data;
+    if (args.length < 2) return;
 
-    c.write(Parser.streamXResponse(stream));
+    const nStrams = Math.round(args.length/2);
+    const keys = args.slice(0, nStrams);
+    const ids = args.slice(nStrams);
+
+    const streams = keys.map((k) => k[1]);
+    const streamIds = ids.map((i) => i[1]);
+
+    for (let i = 0; i < streams.length; i++) {
+      readOne(streams[i], streamIds[i]);
+    }
   }
 }
 
