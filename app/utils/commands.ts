@@ -462,6 +462,9 @@ class Commands {
     if (!store.locked) {
       return c.write(Parser.errorResponse("ERR EXEC without MULTI"));
     }
+
+    c.executeQueued(c);
+    c.queue.unlock();
   }
 }
 
