@@ -459,7 +459,7 @@ class Commands {
   }
 
   static EXEC(c: KServer, args: [number, string][], store: DBStore) {
-    if (!store.locked) {
+    if (!c.queue.locked) {
       return c.write(Parser.errorResponse("ERR EXEC without MULTI"));
     }
 
