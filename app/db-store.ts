@@ -122,16 +122,15 @@ export default class DBStore {
   }
 
   set(
-    raw: Buffer,
     key: string,
     value: string,
-    px: number | undefined = undefined
+    px: number | undefined = undefined,
+    type: DBItem["type"] = "string"
   ) {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
       : undefined;
     const typedValue = !isNaN(parseInt(value)) ? Number(value) : value;
-    const type = typeof typedValue === "string" ? "string" : "number";
 
     this.data[key] = { value: typedValue, px: expiration, type };
     // this.pushToReplicas(raw);

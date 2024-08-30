@@ -56,7 +56,7 @@ class Commands {
       px = args[2][0];
     }
 
-    store.set(raw, key, value, px);
+    store.set(key, value, px);
     if (store.role === "master") {
       const replicasCommand = ["SET", key, value];
       if (px) {
@@ -241,7 +241,7 @@ class Commands {
   }
 
   static XADD(c: net.Socket, args: [number, string][], store: DBStore) {
-    
+
   }
 }
 

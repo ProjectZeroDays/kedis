@@ -152,7 +152,8 @@ export default class Parser {
     }
 
     if (command === "XADD") {
-      console.log(params);
+      console.log("ARGS:", args);
+      console.log("PARAMS:", params);
     }
 
     return {
