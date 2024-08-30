@@ -353,17 +353,17 @@ class Commands {
     const startId = ids.indexOf(id);
 
     if (id === "0-0") {
-      return c.write(Parser.streamItemResponse(stream));
+      return c.write(Parser.streamXResponse(stream));
     }
 
     if (startId === -1) {
-      return c.write(Parser.listResponse([]));
+      return c.write(Parser.streamXResponse(stream));
     }
 
     const data = stream.entries.slice(startId);
     stream.entries = data;
 
-    c.write(Parser.streamItemResponse(stream));
+    c.write(Parser.streamXResponse(stream));
   }
 }
 

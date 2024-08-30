@@ -18,6 +18,33 @@ function XRangeResponse(data: StreamDBItem["entries"]): string {
   return response;
 }
 
+function xReadResponse(
+  streamKey: string,
+  data: StreamDBItem["entries"]
+): string {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return Parser.nilResponse();
+  }
+
+  const encodedEntries = data
+    .map(([id, fields]) => {
+      const fieldEntries = Object.entries(fields)
+        .map(([key, value]: [string, any]) => {
+          return `$${key.length}\r\n${key}\r\n$${value.length}\r\n${value}\r\n`;
+        })
+        .join("");
+
+      return `*2\r\n$${id.length}\r\n${id}\r\n*${
+        Object.entries(fields).length * 2
+      }\r\n${fieldEntries}`;
+    })
+    .join("");
+
+  const result = `*1\r\n*2\r\n$${streamKey.length}\r\n${streamKey}\r\n*${data.length}\r\n${encodedEntries}`;
+
+  return result;
+}
+
 export default class Parser {
   static getArgs(data: Buffer) {
     const args = data.toString().split(`\r\n`);
@@ -59,6 +86,11 @@ export default class Parser {
 
   static streamItemResponse(item: StreamDBItem) {
     const res = XRangeResponse(item.entries);
+    return res;
+  }
+
+  static streamXResponse(item: StreamDBItem) {
+    const res = xReadResponse(item.streamKey, item.entries);
     return res;
   }
 
@@ -186,11 +218,11 @@ export default class Parser {
     }
 
     if (command === "XREAD") {
-      params.forEach(p => {
+      params.forEach((p) => {
         if (p.startsWith("$") || p.length < 1 || p === "streams") return;
 
         slicedParams.push([0, p]);
-      })
+      });
     }
 
     return {
