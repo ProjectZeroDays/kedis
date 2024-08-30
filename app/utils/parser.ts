@@ -117,10 +117,11 @@ export default class Parser {
     const [numOfArgs, commandLength, cmd, ...params] = args;
     let command = cmd as Command;
 
+    if (!command) return undefined;
+    command = command.toUpperCase() as Command;
+
     if (availableCommands.indexOf(command) === -1 && !commands[command])
       return undefined;
-
-    command = command.toUpperCase() as Command;
 
     if (["GET", "SET", "ECHO", "PING", "TYPE"].includes(command)) {
       for (const p of params) {
