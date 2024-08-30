@@ -78,9 +78,11 @@ class Commands {
     }
 
     if (value.itemType === "stream") {
-      c.write(Parser.listResponse(
-        Object.keys(value.value).map(k => `${value.value[k].value}`)
-      ));
+      c.write(
+        Parser.listResponse(
+          Object.keys(value.value).map((k) => `${value.value[k].value}`)
+        )
+      );
       return;
     }
 
@@ -251,6 +253,7 @@ class Commands {
     console.log(args);
     const streamKey = args[0][1];
     const entries: Record<string, BaseDBItem> = {};
+    let latestEntryTime: number[] = [0, 0];
 
     for (let i = 1; i < args.length; i += 3) {
       const id = args[i][1];
@@ -260,9 +263,24 @@ class Commands {
         value,
         type: "string",
         itemType: "base",
-        id
+        id,
       };
 
+      const itemTime = id.split("-").map(i => parseInt(i));
+      const totalTime = itemTime.reduce((a, b) => a + b, 0);
+
+      if (totalTime < 1) {
+        return;
+      }
+
+      if (
+        latestEntryTime[0] >= itemTime[0] &&
+        latestEntryTime[0] > 0
+      ) {
+        return;
+      }
+
+      latestEntryTime = itemTime;
       entries[key] = item;
       c.write(Parser.stringResponse(id));
     }
