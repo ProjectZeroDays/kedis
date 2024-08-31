@@ -19,7 +19,7 @@ function parseArgs(args: string[]) {
 function validateConfig(args: Record<string, string>) {
   let dir = args["dir"];
   let dbfilename = args["dbfilename"];
-  let savedbfilename = args["savedbfilename"] || args["dbfilename"];
+  let savedbfilename = String(args["savedbfilename"] || args["dbfilename"]);
   const port = parseInt(args["port"] || "6379");
   const replicaof = args["replicaof"];
   const saveperiod = parseInt(args["saveperiod"] || "120000");
@@ -33,12 +33,11 @@ function validateConfig(args: Record<string, string>) {
     );
   }
 
-  if (dbfilename.endsWith(".rdb")) {
+  if (savedbfilename.endsWith(".rdb")) {
     console.error(
       "Koxy DB doesn't support writing to .rdb files, will read the data"
     );
     savedbfilename = savedbfilename.replace(".rdb", ".kdb");
-    dbfilename = savedbfilename;
     console.log(`using ${savedbfilename} as savedbfilename`);
   }
 
