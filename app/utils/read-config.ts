@@ -1,3 +1,6 @@
+import defaultConfig from "../../kdb-config";
+import fs from "fs";
+
 export default function readConfig() {
   const args = process.argv.slice(2);
   const config = parseArgs(args);
@@ -17,12 +20,15 @@ function parseArgs(args: string[]) {
 }
 
 function validateConfig(args: Record<string, string>) {
-  let dir = args["dir"];
-  let dbfilename = args["dbfilename"];
-  let savedbfilename = String(args["savedbfilename"] || args["dbfilename"]);
-  const port = parseInt(args["port"] || "6379");
-  const replicaof = args["replicaof"];
-  const saveperiod = parseInt(args["saveperiod"] || "120000");
+  let dir = args["dir"] || defaultConfig.dir;
+  let dbfilename = args["dbfilename"] || defaultConfig.dbfilename;
+  let savedbfilename = String(
+    args["savedbfilename"] || args["dbfilename"] || defaultConfig.dbfilename
+  );
+  const port = parseInt(args["port"] || String(defaultConfig.port));
+  const replicaof = args["replicaof"] || defaultConfig.replicaof;
+  const saveperiod = parseInt(args["saveperiod"] || "3600000");
+  const collections = getCollections();
 
   if (!dir || !dbfilename) {
     // log that they're not defined and define a default one
@@ -41,5 +47,25 @@ function validateConfig(args: Record<string, string>) {
     console.log(`using ${savedbfilename} as savedbfilename`);
   }
 
-  return { dir, dbfilename, savedbfilename, port, replicaof, saveperiod };
+  return {
+    dir,
+    dbfilename,
+    savedbfilename,
+    port,
+    replicaof,
+    saveperiod,
+    collections,
+  };
+}
+
+function getCollections(): Collection[] {
+  const collections = defaultConfig.collections || [];
+
+  if (defaultConfig.collectionsJsonFile) {
+    const json = fs.readFileSync(defaultConfig.collectionsJsonFile, "utf8");
+    const jsonCollections = JSON.parse(json);
+    collections.push(...jsonCollections);
+  }
+
+  return collections;
 }

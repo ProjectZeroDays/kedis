@@ -68,8 +68,9 @@ function xReadMultiResponse(
 }
 
 export default class Parser {
-  static getArgs(data: Buffer) {
-    const args = data.toString().split(`\r\n`);
+  static getArgs(data: string | Buffer) {
+    const txt = typeof data === "string" ? data : data.toString();
+    const args = txt.split(`\r\n`);
     return args;
   }
 
@@ -154,6 +155,37 @@ export default class Parser {
   static nilResponse() {
     return "$-1\r\n";
   }
+
+  static readBulkString(
+    value: string /* something like $${txt.length}\r\n${txt}\r\n */
+  ) {
+    const args = Parser.getArgs(value);
+    return args[1];
+  }
+
+  // KDB stuff
+
+  static toKDBJson(data: unknown) {
+    const txt = JSON.stringify(data);
+    return Parser.stringResponse(`--JSON--${txt}`);
+  }
+
+  static readKDBJson(data: string) {
+    if (data.startsWith("$")) {
+      data = Parser.readBulkString(data);
+    }
+
+    if (!data.startsWith("--JSON--")) return undefined;
+
+    try {
+      const json = JSON.parse(data.slice("--JSON--".length));
+      return json;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  // parsing stuff
 
   static matchInsensetive(str: string, target: string) {
     return str.toLowerCase() === target.toLowerCase();

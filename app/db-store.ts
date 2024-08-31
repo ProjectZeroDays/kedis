@@ -14,36 +14,51 @@ interface Props {
   port: number;
   dir: string;
   dbfilename: string;
-  master: string;
+  master: string | undefined;
   masterId?: string;
+  colllections: Collection[];
 }
 
 type StreamListeners = Record<string, [number, (data: StreamDBItem) => void][]>;
 
 export default class DBStore {
-  data: Record<string, DBItem> = {};
+  data: Record<string, Record<string, DBItem>> = { default: {} };
+  colllections: Collection[];
+  collectionsIds: string[];
+
   dir: string;
   dbfilename: string;
   id: string = crypto.randomBytes(16).toString("hex");
   offset: number = 0;
   role: "master" | "slave";
   master?: { id: string; host: string; port: number };
+
   port: number;
   path: string;
   replicas: [string, net.Socket][] = [];
   streamListeners: StreamListeners = {};
 
-  constructor({ role, port, dir, dbfilename, master, masterId }: Props) {
+  constructor({
+    role,
+    port,
+    dir,
+    dbfilename,
+    master,
+    masterId,
+    colllections,
+  }: Props) {
     this.role = role;
     this.dir = dir;
     this.dbfilename = dbfilename;
     this.port = port;
+    this.colllections = colllections;
+    this.collectionsIds = colllections.map((c) => c.id);
 
     const filePath = path.join(dir, dbfilename);
     this.path = filePath;
 
     if (role === "master") {
-      this.data = loadRDB(filePath);
+      this.data["default"] = loadRDB(filePath);
     }
 
     if (role === "slave" && master && masterId) {
@@ -89,7 +104,7 @@ export default class DBStore {
 
       if (!loadedFile && contents) {
         fs.writeFileSync(file, contents);
-        this.data = loadRDB(file);
+        this.data["default"] = loadRDB(file);
         fs.unlinkSync(file);
         loadedFile = true;
       }
@@ -137,7 +152,8 @@ export default class DBStore {
     value: string,
     px: number | undefined = undefined,
     type: BaseDBItem["type"] = "string",
-    id?: string
+    id?: string,
+    collection: string = "default"
   ) {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
@@ -152,11 +168,11 @@ export default class DBStore {
       id: id || crypto.randomUUID(),
     };
 
-    this.data[key] = item;
+    this.data[collection][key] = item;
   }
 
-  get(key: string) {
-    const data = this.data[key];
+  get(key: string, collection: string = "default") {
+    const data = this.data[collection][key];
     const now = new Date();
 
     if (!data) return null;
@@ -198,7 +214,7 @@ export default class DBStore {
     value: Record<string, BaseDBItem>,
     type: StreamDBItem["type"] = "stream"
   ) {
-    const existItem = this.data[key] as StreamDBItem | undefined;
+    const existItem = this.data["default"][key] as StreamDBItem | undefined;
     const entries: StreamDBItem["entries"] = [];
     const keyValue: [string, string | number][] = [];
 
@@ -213,7 +229,7 @@ export default class DBStore {
         entries.push([value[element].id, keyValue]);
       });
 
-      this.data[key] = existItem;
+      this.data["default"][key] = existItem;
       this.executeListeners(key, { ...existItem, entries: entries });
 
       return;
@@ -231,7 +247,7 @@ export default class DBStore {
       entries,
     };
 
-    this.data[key] = item;
+    this.data["default"][key] = item;
     this.executeListeners(key, item);
   }
 
@@ -280,7 +296,7 @@ export default class DBStore {
   }
 
   getStream(key: string) {
-    return this.data[key] as StreamDBItem | undefined;
+    return this.data["default"][key] as StreamDBItem | undefined;
   }
 
   keys(regexString: string) {

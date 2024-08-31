@@ -13,6 +13,7 @@ const store = new DBStore({
   dbfilename: config.dbfilename,
   master: config.replicaof,
   masterId: config.replicaof ? config.replicaof.split(" ")[0] : undefined,
+  colllections: config.collections,
 });
 
 const server: net.Server = net.createServer((connection: net.Socket) => {

@@ -19,6 +19,8 @@ type Command =
   | "EXEC"
   | "DISCARD";
 
+type KCommand = "KCADD" | "KCDEL" | "KADD" | "KDEL";
+
 interface BaseDBItem {
   value: string | number;
   px?: Date;
@@ -38,18 +40,39 @@ interface StreamDBItem {
 
 type DBItem = BaseDBItem | StreamDBItem;
 
-interface SchemaItem {
+interface SchemaBaseItem {
   key: string;
-  type: "string" | "number";
+  required: boolean;
 }
 
+interface SchemaStringItem extends SchemaBaseItem {
+  type: "string";
+  default?: string;
+}
+
+interface SchemaNumberItem extends SchemaBaseItem {
+  type: "number";
+  default?: number;
+  min?: number;
+  max?: number;
+}
+
+interface SchemaBooleanItem extends SchemaBaseItem {
+  type: "boolean";
+  default?: boolean | (0 | 1);
+}
+
+type SchemaItem = SchemaStringItem | SchemaNumberItem | SchemaBooleanItem;
+
 interface Collection {
-  key: string;
+  id: string;
   schema: SchemaItem[];
+  index?: boolean | string[];
 }
 
 interface Config {
   collections?: Collection[];
+  collectionsJsonFile?: string;
   port: number;
   dir: string;
   dbfilename: string;

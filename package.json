@@ -4,12 +4,17 @@
   "type": "module",
   "scripts": {
     "dev": "bun run app/main.ts",
-    "push": "git add . && git commit --allow-empty -m 'update' && git push"
+    "push": "git add . && git commit --allow-empty -m 'update' && git push",
+    "test": "vitest --watch false --testTimeout 30000"
   },
   "dependencies": {
-    "async": "^3.2.0"
+    "async": "^3.2.0",
+    "benchmark": "^2.1.4",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@types/node": "^20.12.11"
+    "@types/benchmark": "^2.1.5",
+    "@types/node": "^20.12.11",
+    "vitest": "^2.0.5"
   }
 }
