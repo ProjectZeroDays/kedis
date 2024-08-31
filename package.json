@@ -8,13 +8,13 @@
     "test": "vitest --watch false --testTimeout 30000"
   },
   "dependencies": {
-    "async": "^3.2.0",
-    "benchmark": "^2.1.4",
-    "dotenv": "^16.4.5"
+    "async": "^3.2.0"
   },
   "devDependencies": {
     "@types/benchmark": "^2.1.5",
     "@types/node": "^20.12.11",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "benchmark": "^2.1.4",
+    "dotenv": "^16.4.5"
   }
 }
