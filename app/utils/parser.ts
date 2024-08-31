@@ -68,6 +68,28 @@ function xReadMultiResponse(
 }
 
 export default class Parser {
+  static commandsParse: Record<Command, Function> = {
+    GET: Parser.parseTypeA,
+    SET: Parser.parseTypeA,
+    ECHO: Parser.parseTypeA,
+    TYPE: Parser.parseTypeA,
+    PING: () => {},
+    CONFIG: Parser.parseTypeB,
+    KEYS: Parser.parseTypeB,
+    INFO: Parser.parseTypeB,
+    PSYNC: Parser.parseTypeB,
+    DEL: Parser.parseTypeB,
+    REPLCONF: Parser.parseTypeB,
+    XRANGE: Parser.parseTypeB,
+    INCR: Parser.parseTypeB,
+    MULTI: Parser.parseTypeB,
+    EXEC: Parser.parseTypeB,
+    DISCARD: Parser.parseTypeB,
+    WAIT: Parser.parseWAIT,
+    XADD: Parser.parseXADD,
+    XREAD: Parser.parseXREAD,
+  };
+
   static getArgs(data: string | Buffer) {
     const txt = typeof data === "string" ? data : data.toString();
     const args = txt.split(`\r\n`);
@@ -214,11 +236,89 @@ export default class Parser {
     if (wanted.length > 0) return wanted[0];
   }
 
-  static parse(data: Buffer) {
-    const args = Parser.getArgs(data);
-    const slicedParams: [number, string][] = [];
+  static parseTypeA(params: string[], slicedParams: [number, string][]) {
     let tempLength = 0;
     let lastUnique: false | string = false;
+
+    for (const p of params) {
+      if (p.startsWith("$") && lastUnique) continue;
+
+      if (p.startsWith("$") && !lastUnique) {
+        tempLength = Parser.readNumber(p);
+        lastUnique = false;
+        continue;
+      }
+
+      if (!lastUnique && slicedParams.length < 2 && tempLength > 0) {
+        slicedParams.push([tempLength, p]);
+        tempLength = 0;
+        lastUnique = false;
+        continue;
+      }
+
+      if (p.toLowerCase() === "px") {
+        lastUnique = p;
+        continue;
+      }
+
+      if (
+        (lastUnique || "").toLowerCase() === "px" &&
+        !isNaN(Parser.readNumber(p))
+      ) {
+        slicedParams.push([Parser.readNumber(p), "--PX--"]);
+        lastUnique = false;
+      }
+    }
+  }
+
+  static parseTypeB(params: string[], slicedParams: [number, string][]) {
+    for (const p of params) {
+      if (!p.startsWith("$")) {
+        slicedParams.push([0, p]);
+      }
+    }
+  }
+
+  static parseWAIT(params: string[], slicedParams: [number, string][]) {
+    slicedParams.push([parseInt(params[1]), "WAIT"], [parseInt(params[3]), ""]);
+  }
+
+  static parseXADD(params: string[], slicedParams: [number, string][]) {
+    params.forEach((p, index) => {
+      if (p.startsWith("$") || p.length < 1) return;
+
+      if (index % 2 === 1) {
+        slicedParams.push([0, p]);
+      }
+    });
+  }
+
+  static parseXREAD(params: string[], slicedParams: [number, string][]) {
+    let latestIsBlock: boolean = false;
+    params.forEach((p, index) => {
+      if ((p.startsWith("$") && p !== "$") || p.length < 1 || p === "streams")
+        return;
+
+      if (latestIsBlock) {
+        latestIsBlock = false;
+        slicedParams.unshift([parseInt(p), "--BLOCK--"]);
+        return;
+      }
+
+      if (p === "block" && !isNaN(parseInt(params[index + 2]))) {
+        latestIsBlock = true;
+        return;
+      }
+
+      latestIsBlock = false;
+      slicedParams.push([0, p]);
+    });
+  }
+
+  static parse(data: Buffer) {
+    const txt = data.toString();
+    const args = Parser.getArgs(txt);
+    const slicedParams: [number, string][] = [];
 
     const [numOfArgs, commandLength, cmd, ...params] = args;
     let command = cmd as Command;
@@ -226,101 +326,13 @@ export default class Parser {
     if (!command) return undefined;
     command = command.toUpperCase() as Command;
 
-    if (availableCommands.indexOf(command) === -1 && !commands[command])
+    if (availableCommands.indexOf(command) === -1 && !commands[command]) {
       return undefined;
-
-    if (["GET", "SET", "ECHO", "PING", "TYPE"].includes(command)) {
-      for (const p of params) {
-        if (p.startsWith("$") && lastUnique) continue;
-
-        if (p.startsWith("$") && !lastUnique) {
-          tempLength = Parser.readNumber(p);
-          lastUnique = false;
-          continue;
-        }
-
-        if (!lastUnique && slicedParams.length < 2 && tempLength > 0) {
-          slicedParams.push([tempLength, p]);
-          tempLength = 0;
-          lastUnique = false;
-          continue;
-        }
-
-        if (p.toLowerCase() === "px") {
-          lastUnique = p;
-          continue;
-        }
-
-        if (
-          (lastUnique || "").toLowerCase() === "px" &&
-          !isNaN(Parser.readNumber(p))
-        ) {
-          slicedParams.push([Parser.readNumber(p), "--PX--"]);
-          lastUnique = false;
-          continue;
-        }
-      }
     }
 
-    if (
-      [
-        "CONFIG",
-        "KEYS",
-        "INFO",
-        "PSYNC",
-        "DEL",
-        "REPLCONF",
-        "XRANGE",
-        "INCR",
-        "MULTI",
-        "EXEC",
-        "DISCARD",
-      ].includes(command)
-    ) {
-      for (const p of params) {
-        if (p.startsWith("$")) continue;
-
-        slicedParams.push([0, p]);
-      }
-    }
-
-    if (command === "WAIT") {
-      slicedParams.push(
-        [parseInt(params[1]), "WAIT"],
-        [parseInt(params[3]), ""]
-      );
-    }
-
-    if (command === "XADD") {
-      params.forEach((p, index) => {
-        if (p.startsWith("$") || p.length < 1) return;
-
-        if (index % 2 === 1) {
-          slicedParams.push([0, p]);
-        }
-      });
-    }
-
-    if (command === "XREAD") {
-      let latestIsBlock: boolean = false;
-      params.forEach((p, index) => {
-        if ((p.startsWith("$") && p !== "$") || p.length < 1 || p === "streams")
-          return;
-
-        if (latestIsBlock) {
-          latestIsBlock = false;
-          slicedParams.unshift([parseInt(p), "--BLOCK--"]);
-          return;
-        }
-
-        if (p === "block" && !isNaN(parseInt(params[index + 2]))) {
-          latestIsBlock = true;
-          return;
-        }
-
-        latestIsBlock = false;
-        slicedParams.push([0, p]);
-      });
+    const commandParser = Parser.commandsParse[command];
+    if (commandParser) {
+      commandParser(params, slicedParams);
     }
 
     return {
@@ -328,7 +340,7 @@ export default class Parser {
       commandLength,
       command: command as Command,
       params: slicedParams,
-      txt: data.toString(),
+      txt,
     };
   }
 }

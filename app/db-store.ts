@@ -173,11 +173,12 @@ export default class DBStore {
 
   get(key: string, collection: string = "default") {
     const data = this.data[collection][key];
+    if (!data) return null;
+    if (!data.px) return data;
+
     const now = new Date();
 
-    if (!data) return null;
-
-    if ((data.px ?? now) < now) {
+    if (data.px < now) {
       delete this.data[key];
       return null;
     }
@@ -185,16 +186,16 @@ export default class DBStore {
     return data;
   }
 
-  delete(key: string) {
-    delete this.data[key];
+  delete(key: string, collection: string = "default") {
+    delete this.data[collection][key];
   }
 
-  exists(key: string) {
-    return this.data[key] !== undefined;
+  exists(key: string, collection: string = "default") {
+    return this.data[collection][key] !== undefined;
   }
 
-  increment(key: string, value: number = 1) {
-    const item = this.get(key);
+  increment(key: string, value: number = 1, collection: string = "default") {
+    const item = this.get(key, collection);
 
     if (!item) {
       this.set(key, value.toString());

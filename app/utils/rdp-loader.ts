@@ -1,5 +1,6 @@
-import * as fs from "fs";
+import fs from "fs";
 import { bytesToString } from "./helpers";
+import logger from "./logger";
 
 const emptyBase64 =
   "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
@@ -33,25 +34,26 @@ class RDBParser {
           });
           fs.writeFileSync(this.path, Buffer.from(emptyBase64, "base64"));
         } catch (err) {
-          console.error("Can't persist data due to multiple errors");
-          console.error(`error reading RDB file: ${this.path}`, error);
-          console.error(`error creating new RDB file: ${this.path}`, err);
+          logger.error("Can't persist data due to multiple errors");
+          logger.error(`error reading RDB file: ${this.path}`, error);
+          logger.error(`error creating new RDB file: ${this.path}`, err);
           return;
         }
       }
 
-      console.log("Data is persistent to:", path);
+      logger.info("Data is persistent to:", path);
       return;
     }
   }
   parse() {
     if (this.data?.length === 0) return;
     if (bytesToString(this.data.slice(0, 5)) !== "REDIS") {
-      console.log(`Invalid RDB file: ${this.path}`);
+      logger.info(`Invalid RDB file: ${this.path}`);
       return;
     }
-    console.log(`Version: ${bytesToString(this.data.slice(5, 9))}`);
-    //skip header and version
+
+    logger.info("--rdb-info--");
+
     this.index = 9;
     let eof = false;
     while (!eof && this.index < this.data.length) {
@@ -61,35 +63,35 @@ class RDBParser {
           const key = this.readEncodedString();
           switch (key) {
             case "redis-ver":
-              console.log(key, this.readEncodedString());
+              logger.info(key + ": " + this.readEncodedString());
               break;
             case "redis-bits":
-              console.log(key, this.readEncodedInt());
+              logger.info(key + ": " + this.readEncodedInt());
               break;
             case "ctime":
-              console.log(key, new Date(this.readEncodedInt() * 1000));
+              logger.info(key + ": " + new Date(this.readEncodedInt() * 1000).toString().split(" (")[0].toLowerCase());
               break;
             case "used-mem":
-              console.log(key, this.readEncodedInt());
+              logger.info(key + ": " + this.readEncodedInt());
               break;
             case "aof-preamble":
-              console.log(key, this.readEncodedInt());
+              logger.info(key + ": " + this.readEncodedInt());
               break;
             case "aof-base":
-              console.log(key, this.readEncodedInt());
+              logger.info(key + ": " + this.readEncodedInt());
               break;
             default:
-              throw Error("unknown auxiliary field: " + key);
+              logger.error("unknown auxiliary field: " + key);
           }
           break;
         }
         case 0xfb:
-          console.log("keyspace", this.readEncodedInt());
-          console.log("expires", this.readEncodedInt());
+          logger.info("keyspace", this.readEncodedInt());
+          logger.info("expires", this.readEncodedInt());
           this.readEntries();
           break;
         case 0xfe:
-          console.log("db selector", this.readEncodedInt());
+          logger.info("db selector", this.readEncodedInt());
           break;
         case 0xff:
           eof = true;
@@ -149,7 +151,7 @@ class RDBParser {
         case 0: {
           // string encoding
           const value = this.readEncodedString();
-          console.log(key, value, expiration);
+          logger.info(key, value, expiration);
           if ((expiration ?? now) >= now) {
             this.entries[key] = {
               value,

@@ -4,8 +4,13 @@ import Queue from "../queue";
 import execute from "./execute-command";
 import Parser from "./parser";
 import DBStore from "../db-store";
+import http from "node:http";
+import { IncomingMessage } from "http";
 
-export default function buildKServer(c: net.Socket, store: DBStore) {
+export default function buildKServer(
+  c: net.Socket | http.ServerResponse<IncomingMessage>,
+  store: DBStore
+) {
   const kserver = c as any as KServer;
   const queue = new Queue(kserver);
 
