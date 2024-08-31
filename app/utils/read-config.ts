@@ -19,17 +19,28 @@ function parseArgs(args: string[]) {
 function validateConfig(args: Record<string, string>) {
   let dir = args["dir"];
   let dbfilename = args["dbfilename"];
+  let savedbfilename = args["savedbfilename"] || args["dbfilename"];
   const port = parseInt(args["port"] || "6379");
   const replicaof = args["replicaof"];
+  const saveperiod = parseInt(args["saveperiod"] || "120000");
 
   if (!dir || !dbfilename) {
     // log that they're not defined and define a default one
     dir = "/tmp";
-    dbfilename = "db.rdb";
+    dbfilename = "db.kdb";
     console.log(
       `dir or dbfilename not defined, falling back to default values: ${dir}, ${dbfilename}`
     );
   }
 
-  return { dir, dbfilename, port, replicaof };
+  if (dbfilename.endsWith(".rdb")) {
+    console.error(
+      "Koxy DB doesn't support writing to .rdb files, will read the data"
+    );
+    savedbfilename = savedbfilename.replace(".rdb", ".kdb");
+    dbfilename = savedbfilename;
+    console.log(`using ${savedbfilename} as savedbfilename`);
+  }
+
+  return { dir, dbfilename, savedbfilename, port, replicaof, saveperiod };
 }

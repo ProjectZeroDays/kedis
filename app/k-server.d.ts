@@ -1,4 +1,4 @@
-import * as net from "net";
+import net from "net";
 import Queue from "./queue";
 
 export interface KServer extends net.Socket {

@@ -9,6 +9,17 @@ import getBytes from "./utils/get-bytes";
 import { KServer } from "./k-server";
 import buildKServer from "./utils/build-kserver";
 
+interface Props {
+  role: "master" | "slave";
+  port: number;
+  dir: string;
+  dbfilename: string;
+  master: string;
+  masterId?: string;
+}
+
+type StreamListeners = Record<string, [number, (data: StreamDBItem) => void][]>;
+
 export default class DBStore {
   data: Record<string, DBItem> = {};
   dir: string;
@@ -20,20 +31,9 @@ export default class DBStore {
   port: number;
   path: string;
   replicas: [string, net.Socket][] = [];
-  commands: Buffer[] = [];
-  locked: boolean = false;
-  replicationOffset: number = 0;
-  streamsBlocksTiming: Record<string, number> = {};
-  streamListeners: Record<string, [number, ((data: StreamDBItem) => void)][]> = {};
+  streamListeners: StreamListeners = {};
 
-  constructor(
-    role: "master" | "slave",
-    port: number,
-    dir: string,
-    dbfilename: string,
-    master: string,
-    masterId?: string
-  ) {
+  constructor({ role, port, dir, dbfilename, master, masterId }: Props) {
     this.role = role;
     this.dir = dir;
     this.dbfilename = dbfilename;
@@ -58,9 +58,12 @@ export default class DBStore {
     const master = this.master!;
     const socket = new net.Socket();
     const kserver = buildKServer(socket, this);
-    kserver.queueWrite = (c: net.Socket | KServer, data: string | Uint8Array) => {
+    kserver.queueWrite = (
+      c: net.Socket | KServer,
+      data: string | Uint8Array
+    ) => {
       c.write(data);
-    }
+    };
 
     socket.connect(master.port, master.host);
     let step = 0;
@@ -126,7 +129,6 @@ export default class DBStore {
   }
 
   pushToReplicas(txt: string) {
-    console.warn("Replicas:", this.replicas.length);
     this.replicas.forEach((r) => r[1].write(txt));
   }
 
@@ -151,6 +153,28 @@ export default class DBStore {
     };
 
     this.data[key] = item;
+  }
+
+  get(key: string) {
+    const data = this.data[key];
+    const now = new Date();
+
+    if (!data) return null;
+
+    if ((data.px ?? now) < now) {
+      delete this.data[key];
+      return null;
+    }
+
+    return data;
+  }
+
+  delete(key: string) {
+    delete this.data[key];
+  }
+
+  exists(key: string) {
+    return this.data[key] !== undefined;
   }
 
   increment(key: string, value: number = 1) {
@@ -190,8 +214,7 @@ export default class DBStore {
       });
 
       this.data[key] = existItem;
-      this.streamsBlocksTiming[key] = Date.now();
-      this.executeListeners(key, {...existItem, entries: entries});
+      this.executeListeners(key, { ...existItem, entries: entries });
 
       return;
     } else {
@@ -209,7 +232,6 @@ export default class DBStore {
     };
 
     this.data[key] = item;
-    this.streamsBlocksTiming[key] = Date.now();
     this.executeListeners(key, item);
   }
 
@@ -259,25 +281,6 @@ export default class DBStore {
 
   getStream(key: string) {
     return this.data[key] as StreamDBItem | undefined;
-  }
-
-  get(key: string) {
-    const data = this.data[key];
-    const now = new Date();
-
-    if (!data) return null;
-
-    if ((data.px ?? now) < now) {
-      delete this.data[key];
-      return null;
-    }
-
-    return data;
-  }
-
-  delete(raw: Buffer, key: string) {
-    delete this.data[key];
-    // this.pushToReplicas(raw);
   }
 
   keys(regexString: string) {

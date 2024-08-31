@@ -37,3 +37,21 @@ interface StreamDBItem {
 }
 
 type DBItem = BaseDBItem | StreamDBItem;
+
+interface SchemaItem {
+  key: string;
+  type: "string" | "number";
+}
+
+interface Collection {
+  key: string;
+  schema: SchemaItem[];
+}
+
+interface Config {
+  collections?: Collection[];
+  port: number;
+  dir: string;
+  dbfilename: string;
+  replicaof?: string;
+}

@@ -173,7 +173,6 @@ export default class Parser {
     if (!txt.startsWith("*")) return undefined;
 
     const parts = txt.substring(1).split(/\*/);
-    // add the star to the start of the first part:
     parts[0] = "*" + parts[0];
 
     const wanted = parts.filter(

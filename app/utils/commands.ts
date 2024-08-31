@@ -87,7 +87,8 @@ class Commands {
     }
 
     if (value.itemType === "stream") {
-      c.queueWrite(c, 
+      c.queueWrite(
+        c,
         Parser.listResponse(
           Object.keys(value.value).map((k) => `${value.value[k].value}`)
         )
@@ -124,7 +125,7 @@ class Commands {
     raw: Buffer
   ) {
     const key = args[0][1];
-    store.delete(raw, key);
+    store.delete(key);
     if (store.role === "master") {
       store.pushToReplicas(Parser.listResponse(["DEL", key]));
       c.queueWrite(c, Parser.okResponse());
@@ -160,7 +161,10 @@ class Commands {
     const cmdType = args[0][1];
 
     if (cmdType === "GETACK") {
-      c.queueWrite(c, Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`]));
+      c.queueWrite(
+        c,
+        Parser.listResponse(["REPLCONF", "ACK", `${store.offset}`])
+      );
 
       if (args.length < 3) {
         store.offset += getBytes("*\r\n");
@@ -178,8 +182,12 @@ class Commands {
 
   static PSYNC(c: KServer, args: [number, string][], store: DBStore) {
     const [replid, offset] = [args[0][1], args[1][1]];
-    c.queueWrite(c, Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`));
-    c.queueWrite(c, 
+    c.queueWrite(
+      c,
+      Parser.simpleResponse(`FULLRESYNC ${store.id} ${store.offset}`)
+    );
+    c.queueWrite(
+      c,
       Buffer.concat([
         Buffer.from(`$${EMPTY_RDB.length}\r\n`, "utf8"),
         EMPTY_RDB,
@@ -238,7 +246,8 @@ class Commands {
 
       passed = true;
       store.replicas.forEach((r) => r[1].off("data", listener));
-      c.queueWrite(c, 
+      c.queueWrite(
+        c,
         Parser.numberResponse(
           acks.length === 0 ? store.replicas.length : acks.length
         )
@@ -355,11 +364,7 @@ class Commands {
       args.shift();
     }
 
-    async function readOne(
-      streamKey: string,
-      id: string,
-    ) {
-
+    async function readOne(streamKey: string, id: string) {
       if (block > -1) {
         let didread: boolean = false;
 
@@ -445,7 +450,10 @@ class Commands {
     const value = store.increment(key);
 
     if (value === null) {
-      return c.queueWrite(c, Parser.errorResponse("ERR value is not an integer or out of range"));
+      return c.queueWrite(
+        c,
+        Parser.errorResponse("ERR value is not an integer or out of range")
+      );
     }
 
     c.queueWrite(c, Parser.numberResponse(value));
