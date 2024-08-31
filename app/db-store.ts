@@ -299,8 +299,8 @@ export default class DBStore {
     return this.data["default"][key] as StreamDBItem | undefined;
   }
 
-  keys(regexString: string) {
-    const keys = Object.keys(this.data);
+  keys(regexString: string, collection: string = "default") {
+    const keys = Object.keys(this.data[collection]);
 
     if (regexString === "" || regexString === "*") {
       return keys;
