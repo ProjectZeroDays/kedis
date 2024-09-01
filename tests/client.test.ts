@@ -50,13 +50,18 @@ describe("Server-Client", () => {
     // expect(hello.substring(0, 1)).toBe("-");
 
     const ping = await sendRequest(Parser.listResponse(["PING"]));
-    // expect(ping).toBe("+PONG\r\n");
+    expect(ping).toBe("+PONG\r\n");
 
-    // const set = await sendRequest(Parser.listResponse(["SET", "foo", "bar"]));
-    // expect(set).toBe(Parser.okResponse());
+    const set = await sendRequest(Parser.listResponse(["SET", "foo", "bar"]));
+    await sendRequest(Parser.listResponse(["SET", "foo2", "bar2"]));
+    await sendRequest(Parser.listResponse(["SET", "foo3", "bar3"]));
+    await sendRequest(Parser.listResponse(["SET", "foo4", "bar4"]));
+    await sendRequest(Parser.listResponse(["SET", "foo5", "bar5"]));
 
-    // const get = await sendRequest(Parser.listResponse(["GET", "foo"]));
-    // expect(get).toBe(Parser.stringResponse("bar"));
+    expect(set).toBe(Parser.okResponse());
+
+    const get = await sendRequest(Parser.listResponse(["GET", "foo4"]));
+    expect(get).toBe(Parser.stringResponse("bar4"));
     return;
 
     const body = Parser.listResponse(["ping"]);

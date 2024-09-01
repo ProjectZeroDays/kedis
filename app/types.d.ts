@@ -77,4 +77,5 @@ interface Config {
   dir: string;
   dbfilename: string;
   replicaof?: string;
+  saveperiod?: number;
 }

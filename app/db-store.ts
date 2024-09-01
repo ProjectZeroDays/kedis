@@ -8,6 +8,8 @@ import { commands } from "./utils/commands";
 import getBytes from "./utils/get-bytes";
 import { KServer } from "./k-server";
 import buildKServer from "./utils/build-kserver";
+import KDB from "./utils/kdb";
+import logger from "./utils/logger";
 
 interface Props {
   role: "master" | "slave";
@@ -17,13 +19,14 @@ interface Props {
   master: string | undefined;
   masterId?: string;
   colllections: Collection[];
+  kdb: KDB;
 }
 
 type StreamListeners = Record<string, [number, (data: StreamDBItem) => void][]>;
 
 export default class DBStore {
   data: Record<string, Record<string, DBItem>> = { default: {} };
-  colllections: Collection[];
+  collections: Collection[];
   collectionsIds: string[];
 
   dir: string;
@@ -38,6 +41,10 @@ export default class DBStore {
   replicas: [string, net.Socket][] = [];
   streamListeners: StreamListeners = {};
 
+  commands: string[] = [];
+  commandsKeys: string[] = [];
+  commandsLookup: Map<string, string> = new Map();
+
   constructor({
     role,
     port,
@@ -46,27 +53,38 @@ export default class DBStore {
     master,
     masterId,
     colllections,
+    kdb,
   }: Props) {
     this.role = role;
     this.dir = dir;
     this.dbfilename = dbfilename;
     this.port = port;
-    this.colllections = colllections;
+    this.collections = colllections;
     this.collectionsIds = colllections.map((c) => c.id);
 
     const filePath = path.join(dir, dbfilename);
     this.path = filePath;
-
-    if (role === "master") {
-      this.data["default"] = loadRDB(filePath);
-    }
 
     if (role === "slave" && master && masterId) {
       const [host, port] = master.split(" ");
       this.master = { host, port: parseInt(port), id: masterId };
     }
 
-    if (this.role === "slave") this.connectMaster();
+    if (this.role === "slave") {
+      this.connectMaster();
+      return;
+    }
+
+    if (dbfilename.endsWith(".rdb")) {
+      this.data["default"] = loadRDB(filePath);
+      return;
+    }
+
+    const getStore = () => this;
+    getStore.bind(this);
+
+
+    kdb.load(this, () => kdb.writeLoop(getStore));
   }
 
   private connectMaster() {
@@ -169,13 +187,58 @@ export default class DBStore {
     };
 
     this.data[collection][key] = item;
+    this.addSetCommand(key, value, collection);
   }
 
-  get(key: string, collection: string = "default") {
-    const data = this.data[collection][key];
-    if (!data) return null;
-    if (!data.px) return data;
+  addSetCommand(
+    key: string,
+    value: string,
+    collection: string = "default"
+  ) {
+    const command = Parser.commandString(key, value, collection);
+    this.commandsLookup.set(command.split("<-KC->")[0], command);
+  }
 
+  loadSetCommand(key: string, collection: string) {
+    const commandKey = Parser.commandKey(key, collection);
+    const exist = this.commandsLookup.get(commandKey);
+
+    if (exist) return;
+
+    const keyExist = this.commandsKeys.indexOf(commandKey);
+
+    if (keyExist === -1) {
+      logger.error(`set command doesn't exist: ${commandKey}`);
+      return;
+    }
+
+    const parsed = Parser.readCommandString(this.commands[keyExist]);
+    if (!parsed) return;
+
+    this.set(
+      parsed.key,
+      parsed.value,
+      undefined,
+      "string",
+      undefined,
+      parsed.collection
+    );
+  }
+
+  get(
+    key: string,
+    collection: string = "default",
+    turn: boolean = false
+  ): null | DBItem {
+    const data = this.data[collection][key];
+    if (!data && turn) return null;
+
+    if (!data) {
+      this.loadSetCommand(key, collection);
+      return this.get(key, collection, true);
+    }
+
+    if (!data.px) return data;
     const now = new Date();
 
     if (data.px < now) {
@@ -188,18 +251,42 @@ export default class DBStore {
 
   delete(key: string, collection: string = "default") {
     delete this.data[collection][key];
+    this.commandsLookup.delete(key);
   }
 
-  exists(key: string, collection: string = "default") {
-    return this.data[collection][key] !== undefined;
+  exists(
+    key: string,
+    collection: string = "default",
+    turn: boolean = false
+  ): boolean {
+    const exist = this.data[collection][key];
+
+    if (!exist && turn) return false;
+
+    if (!exist) {
+      this.loadSetCommand(key, collection);
+      return this.exists(key, collection, true);
+    }
+
+    return true;
   }
 
-  increment(key: string, value: number = 1, collection: string = "default") {
+  increment(
+    key: string,
+    value: number = 1,
+    collection: string = "default",
+    turn: boolean = false
+  ): null | number {
     const item = this.get(key, collection);
 
-    if (!item) {
+    if (!item && turn) {
       this.set(key, value.toString());
       return value;
+    }
+
+    if (!item) {
+      this.loadSetCommand(key, collection);
+      return this.increment(key, value, collection, true);
     }
 
     if (typeof item.value !== "number") {

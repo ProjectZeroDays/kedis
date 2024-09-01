@@ -1,7 +1,8 @@
 const config: Config = {
-  port: 6379,
-  dbfilename: "dump.kdb",
-  dir: "/tmp",
+  port: 8080,
+  dbfilename: "test.kdb",
+  dir: "/home/user/kedis/data",
+  saveperiod: 10000,
   collections: [
     {
       id: "people",

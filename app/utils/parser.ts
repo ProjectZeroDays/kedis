@@ -189,7 +189,7 @@ export default class Parser {
 
   static toKDBJson(data: unknown) {
     const txt = JSON.stringify(data);
-    return Parser.stringResponse(`--JSON--${txt}`);
+    return Parser.stringResponse(`--KJ--${txt}`);
   }
 
   static readKDBJson(data: string) {
@@ -197,14 +197,46 @@ export default class Parser {
       data = Parser.readBulkString(data);
     }
 
-    if (!data.startsWith("--JSON--")) return undefined;
+    if (!data.startsWith("--KJ--")) return undefined;
 
     try {
-      const json = JSON.parse(data.slice("--JSON--".length));
+      const json = JSON.parse(data.slice("--KJ--".length));
       return json;
     } catch (e) {
       return undefined;
     }
+  }
+
+  static commandKey(key: string, collection: string) {
+    return `KK:${key}--KC:${collection}`;
+  }
+
+  static commandString(key: string, value: string, collection: string) {
+    return `KK:${key}--KC:${collection}<-KC->${value}`;
+  }
+
+  static readCommandString(command: string):
+    | undefined
+    | {
+        key: string;
+        value: string;
+        collection: string;
+      } {
+    if (!command.startsWith("KK:")) return undefined;
+
+    const kcIndex = command.indexOf("<-KC->");
+    if (kcIndex === -1) return undefined;
+
+    const keyCollectionPart = command.substring(3, kcIndex); // Skip "KK:"
+    const value = command.substring(kcIndex + 6); // Skip "<-KC->"
+
+    const kcSeparatorIndex = keyCollectionPart.indexOf("--KC:");
+    if (kcSeparatorIndex === -1) return undefined;
+
+    const key = keyCollectionPart.substring(0, kcSeparatorIndex);
+    const collection = keyCollectionPart.substring(kcSeparatorIndex + 5); // Skip "--KC:"
+
+    return { key, value, collection };
   }
 
   // parsing stuff
