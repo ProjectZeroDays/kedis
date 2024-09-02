@@ -6,11 +6,11 @@ import Validator from "./validator";
 import sleep from "./sleep";
 
 interface KDBInfoData {
-  "kedis-version": string;
+  "kdb-version": string;
   id: string;
   path: string;
   "snapshot-time": string;
-  csum: number;
+  collections: number;
   points: number;
   size: number;
 }
@@ -33,8 +33,8 @@ export default class KDB {
     try {
       logger.info(`loading snapshot from ${this.path}`);
 
-      const file = Bun.file(this.path);
-      const content = await file.text();
+      const file = fs.readFileSync(this.path);
+      const content = file.toString();
       logger.info(`loaded kdb file to memory`);
 
       const [info, data, collections] = await Promise.all([
@@ -180,17 +180,17 @@ export default class KDB {
   buildInfo(id: string, store: DBStore, data: string): KDBInfoData {
     const snapshottime = Date.now();
     const path = this.path;
-    const csum = Object.keys(store.data).length;
+    const csum = store.collections.length;
     const size = Buffer.byteLength(data);
 
     return {
       id,
-      "kedis-version": "1.0.0",
+      "kdb-version": "1.0.0",
       path,
       "snapshot-time": snapshottime.toString(),
-      csum,
-      size,
+      collections: csum,
       points: store.commandsLookup.size,
+      size
     };
   }
 
@@ -209,6 +209,8 @@ export default class KDB {
 
     process.on("SIGINT", async () => {
       logger.info("SIGINT signal received. making sure to persist data");
+      if (this.loading) return;
+
       while (this.writing) {
         await sleep(10);
       }

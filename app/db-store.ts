@@ -14,8 +14,11 @@ import buildKServer from "./utils/build-kserver";
 import KDB from "./utils/kdb";
 import logger from "./utils/logger";
 import Validator from "./utils/validator";
-import { ServerWebSocket, sleep } from "bun";
 import RealtimePool from "./utils/realtime";
+import sleep from "./utils/sleep";
+import WebSocket from "ws";
+
+type ServerWebSocket<T> = WebSocket;
 
 interface Props {
   role: "master" | "slave";
@@ -478,5 +481,44 @@ export default class DBStore {
 
   unsubscribe(ws: ServerWebSocket<any>, collection: string, key: string) {
     this.realtime.unsubscribe(ws, collection, key);
+  }
+
+  // collections
+
+  setCollection(collection: Collection) {
+    if (this.collectionsIds.includes(collection.id)) {
+      return this.updateCollection(collection.id, collection);
+    }
+
+    this.collections.push(collection);
+    this.collectionsIds.push(collection.id);
+    this.collectionsValidators.set(collection.id, new Validator(collection));
+
+    this.data[collection.id] = new Map();
+  }
+
+  updateCollection(id: string, collection: Collection) {
+    this.collections = this.collections.map((c) => {
+      if (c.id === id) {
+        return collection;
+      }
+
+      return c;
+    });
+
+    this.collectionsValidators.set(id, new Validator(collection));
+  }
+
+  deleteCollection(id: string) {
+    if (!this.collectionsIds.includes(id)) return;
+
+    this.collections = this.collections.filter((c) => c.id !== id);
+    this.collectionsIds = this.collectionsIds.filter((c) => c !== id);
+    this.collectionsValidators.delete(id);
+    delete this.data[id];
+  }
+
+  resetCollection(id: string) {
+    this.data[id] = new Map();
   }
 }

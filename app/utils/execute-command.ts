@@ -1,25 +1,27 @@
 import DBStore from "../db-store";
 import { KServer } from "../k-server";
+import Auth from "./auth";
 import { commands } from "./commands";
-import logger from "./logger";
 import Parser from "./parser";
+import http from "http";
 
 const execute = async (
   kserver: KServer,
   data: Buffer,
   store: DBStore,
-  jump: boolean = false
+  auth: Auth,
+  headers: http.IncomingHttpHeaders
 ): Promise<boolean> => {
   const parsed = Parser.parse(data);
   if (!parsed) return false;
 
-  // logger.info(`executing command: ${parsed.command} - ${parsed.params}`);
+  const allow = await auth.applyAuth(parsed.command, headers);
+  if (!allow) {
+    kserver.queueWrite(kserver, Parser.errorResponse("Unauthorized"));
+    return true;
+  }
 
-  if (
-    kserver.queue.locked &&
-    !jump &&
-    !["EXEC", "DISCARD"].includes(parsed.command)
-  ) {
+  if (kserver.queue.locked && !["EXEC", "DISCARD"].includes(parsed.command)) {
     kserver.queueCommand(kserver, data);
     return true;
   }

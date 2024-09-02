@@ -6,11 +6,10 @@
   "scripts": {
     "dev": "bun run app/main.ts",
     "push": "git add . && git commit --allow-empty -m 'update' && git push",
-    "test": "vitest --watch false --testTimeout 30000"
+    "test": "vitest --watch false --testTimeout 30000",
+    "ts-build": "tsup --dts-resolve"
   },
   "dependencies": {
-    "async": "^3.2.0",
-    "msgpack-lite": "^0.1.26",
     "winston": "^3.14.2",
     "ws": "^8.18.0"
   },
@@ -20,7 +19,10 @@
     "@types/msgpack-lite": "^0.1.11",
     "@types/node": "^20.12.11",
     "benchmark": "^2.1.4",
+    "bun": "^1.1.26",
     "dotenv": "^16.4.5",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
     "vitest": "^2.0.5"
   }
 }

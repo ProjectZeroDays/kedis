@@ -6,6 +6,7 @@ import Parser from "./parser";
 import DBStore from "../db-store";
 import http from "node:http";
 import { IncomingMessage } from "http";
+import Auth from "./auth";
 
 export default function buildKServer(
   c: net.Socket | http.ServerResponse<IncomingMessage>,
@@ -32,7 +33,7 @@ export default function buildKServer(
 
   kserver.executeQueued = async (c) => {
     for (const command of c.queue.queue) {
-      await execute(kserver, command, store, true);
+      await execute(kserver, command, store, new Auth(), {});
     }
 
     const results = c.queue.getResults();

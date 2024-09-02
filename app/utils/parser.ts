@@ -88,8 +88,11 @@ export default class Parser {
     WAIT: Parser.parseWAIT,
     XADD: Parser.parseXADD,
     XREAD: Parser.parseXREAD,
-    KADD: Parser.parseTypeB,
-    KGET: Parser.parseTypeB
+    KSET: Parser.parseTypeB,
+    KGET: Parser.parseTypeB,
+    KDEL: Parser.parseTypeB,
+    KCSET: Parser.parseTypeB,
+    KCDEL: Parser.parseTypeB,
   };
 
   static getArgs(data: string | Buffer) {
@@ -213,7 +216,9 @@ export default class Parser {
     return `KK:${key}--KC:${collection}`;
   }
 
-  static readCommandKey(value: string): { collection: string, key: string } | undefined {
+  static readCommandKey(
+    value: string
+  ): { collection: string; key: string } | undefined {
     if (!value.startsWith("KK:")) return undefined;
 
     const parts = value.split("--KC:");
@@ -373,6 +378,16 @@ export default class Parser {
 
     if (!command) return undefined;
     command = command.toUpperCase() as Command;
+
+    if (command === "PING") {
+      return {
+        numOfArgs,
+        commandLength,
+        command: command as Command,
+        params: slicedParams,
+        txt,
+      };
+    }
 
     if (availableCommands.indexOf(command) === -1 && !commands[command]) {
       return undefined;

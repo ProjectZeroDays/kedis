@@ -1,6 +1,9 @@
-import { ServerWebSocket } from "bun";
+// import { ServerWebSocket } from "bun";
 import Parser from "./parser";
 import logger from "./logger";
+import WebSocket from "ws";
+
+type ServerWebSocket<T> = WebSocket;
 
 export default class RealtimePool {
   listeners: Map<string, ServerWebSocket<any>[]> = new Map();

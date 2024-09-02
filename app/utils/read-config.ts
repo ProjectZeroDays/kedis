@@ -30,7 +30,6 @@ function validateConfig(args: Record<string, string>) {
   const saveperiod = parseInt(
     args["saveperiod"] || String(defaultConfig.saveperiod || "3600000")
   );
-  const collections = getCollections();
 
   if (!dir || !dbfilename) {
     // log that they're not defined and define a default one
@@ -47,19 +46,6 @@ function validateConfig(args: Record<string, string>) {
     port,
     replicaof,
     saveperiod,
-    collections,
     realtimeport,
   };
-}
-
-function getCollections(): Collection[] {
-  const collections = defaultConfig.collections || [];
-
-  if (defaultConfig.collectionsJsonFile) {
-    const json = fs.readFileSync(defaultConfig.collectionsJsonFile, "utf8");
-    const jsonCollections = JSON.parse(json);
-    collections.push(...jsonCollections);
-  }
-
-  return collections;
 }

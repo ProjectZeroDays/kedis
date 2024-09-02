@@ -8,6 +8,7 @@ const sendRequest = async (body: string) => {
     method: "POST",
     headers: {
       "Content-Type": "text/plain",
+      authorization: "Token"
     },
     body,
   });

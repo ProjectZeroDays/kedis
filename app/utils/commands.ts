@@ -3,20 +3,18 @@ import DBStore from "../db-store";
 import getBytes from "./get-bytes";
 import streamTime, { streamBiggestId, compareStreamTime } from "./stream-time";
 import { KServer } from "../k-server";
+import sleep from "./sleep";
 
 type CommandFunc = (
   c: KServer,
   params: [number, string][],
-  store: DBStore,
+  store: DBStore
 ) => void;
 
 const EMPTY_RDB = Buffer.from(
   "524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2",
   "hex"
 );
-
-// sleep function:
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const availableCommands: Command[] = [
   "PING",
@@ -51,11 +49,7 @@ class Commands {
     c.queueWrite(c, value);
   }
 
-  static SET(
-    c: KServer,
-    args: [number, string][],
-    store: DBStore,
-  ) {
+  static SET(c: KServer, args: [number, string][], store: DBStore) {
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
 
@@ -116,11 +110,7 @@ class Commands {
     c.queueWrite(c, Parser.listResponse(res));
   }
 
-  static DEL(
-    c: KServer,
-    args: [number, string][],
-    store: DBStore,
-  ) {
+  static DEL(c: KServer, args: [number, string][], store: DBStore) {
     const key = args[0][1];
     store.delete(key);
     if (store.role === "master") {
@@ -479,16 +469,23 @@ class Commands {
   }
 
   // ---- KEDIS COMMANDS
-  static KADD(c: KServer, args: [number, string][], store: DBStore) {
+  static KSET(c: KServer, args: [number, string][], store: DBStore) {
     const collection = args[0][1];
     const key = args[1][1];
     const data = args[2][1];
 
-    const res = store.set(key, data, undefined, "string", undefined, collection);
+    const res = store.set(
+      key,
+      data,
+      undefined,
+      "string",
+      undefined,
+      collection
+    );
 
     if (res === true) return c.queueWrite(c, Parser.okResponse());
 
-    c.queueWrite(c, Parser.errorResponse(res))
+    c.queueWrite(c, Parser.errorResponse(res));
   }
 
   static KGET(c: KServer, args: [number, string][], store: DBStore) {
@@ -503,6 +500,43 @@ class Commands {
     }
 
     c.queueWrite(c, Parser.dynamicResponse(value.value));
+  }
+
+  static KDEL(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const key = args[1][1];
+
+    store.delete(key, collection);
+    c.queueWrite(c, Parser.okResponse());
+  }
+
+  static KCSET(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const payload = args[1][1];
+
+    const parsed = Parser.readKDBJson(payload);
+    if (!parsed || !Array.isArray(parsed.schema)) {
+      return c.queueWrite(
+        c,
+        Parser.errorResponse("Invalid collection payload")
+      );
+    }
+
+    store.setCollection({
+      id: collection,
+      version: 0,
+      schema: parsed.schema,
+      index: parsed.index || []
+    });
+
+    c.queueWrite(c, Parser.okResponse());
+  }
+
+  static KCDEL(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+
+    store.deleteCollection(collection);
+    c.queueWrite(c, Parser.okResponse());
   }
 }
 
@@ -526,6 +560,9 @@ export const commands: Record<Command, CommandFunc> = {
   MULTI: Commands.MULTI,
   EXEC: Commands.EXEC,
   DISCARD: Commands.DISCARD,
-  KADD: Commands.KADD,
+  KSET: Commands.KSET,
   KGET: Commands.KGET,
+  KDEL: Commands.KDEL,
+  KCSET: Commands.KCSET,
+  KCDEL: Commands.KCDEL,
 };
