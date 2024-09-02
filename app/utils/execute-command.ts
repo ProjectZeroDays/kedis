@@ -29,7 +29,7 @@ const execute = async (
   const func = commands[command];
   if (!func) return false;
 
-  await func(kserver, params, store, data);
+  await func(kserver, params, store);
   return true;
 };
 

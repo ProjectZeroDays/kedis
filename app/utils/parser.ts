@@ -88,6 +88,8 @@ export default class Parser {
     WAIT: Parser.parseWAIT,
     XADD: Parser.parseXADD,
     XREAD: Parser.parseXREAD,
+    KADD: Parser.parseTypeB,
+    KGET: Parser.parseTypeB
   };
 
   static getArgs(data: string | Buffer) {
@@ -211,8 +213,22 @@ export default class Parser {
     return `KK:${key}--KC:${collection}`;
   }
 
+  static readCommandKey(value: string): { collection: string, key: string } | undefined {
+    if (!value.startsWith("KK:")) return undefined;
+
+    const parts = value.split("--KC:");
+    const collection = parts[1];
+    const key = parts[0].substring(3);
+
+    return { collection, key };
+  }
+
   static commandString(key: string, value: string, collection: string) {
     return `KK:${key}--KC:${collection}<-KC->${value}`;
+  }
+
+  static eventResponse(type: "SET" | "DEL", value: string) {
+    return `KEVENT-${type}::${value}`;
   }
 
   static readCommandString(command: string):

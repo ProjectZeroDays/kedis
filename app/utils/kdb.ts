@@ -2,6 +2,8 @@ import DBStore from "../db-store";
 import logger from "./logger";
 import Parser from "./parser";
 import fs from "fs";
+import Validator from "./validator";
+import sleep from "./sleep";
 
 interface KDBInfoData {
   "kedis-version": string;
@@ -13,18 +15,12 @@ interface KDBInfoData {
   size: number;
 }
 
-const xorKey = Buffer.from("kdb");
-
-// sleep function:
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export default class KDB {
   path: string;
   saveperiod: number;
   loopStrated: boolean = false;
   writing: boolean = false;
+  loading: boolean = false;
 
   constructor(path: string, saveperiod: number) {
     this.path = path;
@@ -32,6 +28,8 @@ export default class KDB {
   }
 
   async load(store: DBStore, onFinish?: () => any) {
+    this.loading = true;
+
     try {
       logger.info(`loading snapshot from ${this.path}`);
 
@@ -51,6 +49,10 @@ export default class KDB {
 
       store.commands = data;
       store.collections = collections;
+      store.collectionsIds = collections.map((c) => c.id);
+      store.collectionsValidators = new Map(
+        collections.map((c) => [c.id, new Validator(c)])
+      );
 
       logger.info("loading commands lookup table... (this may take a while)");
       let now = Date.now();
@@ -69,6 +71,8 @@ export default class KDB {
         return;
       }
       logger.error(`error loading snapshot: ${err.message || err}`);
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -106,7 +110,7 @@ export default class KDB {
   }
 
   async write(store: DBStore) {
-    if (this.writing) return;
+    if (this.writing || this.loading) return;
     logger.info("writing snapshot to disk...");
 
     try {
@@ -166,10 +170,8 @@ export default class KDB {
     const iterator = store.commandsLookup.values();
 
     for (const command of iterator) {
-      if (commandsContent) {
-        commandsContent += delimiter;
-      }
       commandsContent += command;
+      commandsContent += delimiter;
     }
 
     return [commandsContent];

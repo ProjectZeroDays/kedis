@@ -1,4 +1,7 @@
-import { loadRDB } from "./utils/rdp-loader";
+/*
+  replication doesn't work for now, will be working on it later
+*/
+
 import net from "net";
 import crypto from "crypto";
 import Parser from "./utils/parser";
@@ -10,6 +13,9 @@ import { KServer } from "./k-server";
 import buildKServer from "./utils/build-kserver";
 import KDB from "./utils/kdb";
 import logger from "./utils/logger";
+import Validator from "./utils/validator";
+import { ServerWebSocket, sleep } from "bun";
+import RealtimePool from "./utils/realtime";
 
 interface Props {
   role: "master" | "slave";
@@ -25,9 +31,10 @@ interface Props {
 type StreamListeners = Record<string, [number, (data: StreamDBItem) => void][]>;
 
 export default class DBStore {
-  data: Record<string, Record<string, DBItem>> = { default: {} };
+  data: Record<string, Map<string, DBItem>> = { default: new Map() };
   collections: Collection[];
   collectionsIds: string[];
+  collectionsValidators: Map<string, Validator> = new Map();
 
   dir: string;
   dbfilename: string;
@@ -44,6 +51,9 @@ export default class DBStore {
   commands: string[] = [];
   commandsKeys: string[] = [];
   commandsLookup: Map<string, string> = new Map();
+  ready: boolean = false;
+
+  realtime: RealtimePool;
 
   constructor({
     role,
@@ -60,7 +70,11 @@ export default class DBStore {
     this.dbfilename = dbfilename;
     this.port = port;
     this.collections = colllections;
+    this.realtime = new RealtimePool();
     this.collectionsIds = colllections.map((c) => c.id);
+    this.collectionsValidators = new Map(
+      colllections.map((c) => [c.id, new Validator(c)])
+    );
 
     const filePath = path.join(dir, dbfilename);
     this.path = filePath;
@@ -72,19 +86,20 @@ export default class DBStore {
 
     if (this.role === "slave") {
       this.connectMaster();
-      return;
-    }
-
-    if (dbfilename.endsWith(".rdb")) {
-      this.data["default"] = loadRDB(filePath);
+      this.ready = true;
       return;
     }
 
     const getStore = () => this;
     getStore.bind(this);
 
+    const markRead = () => (this.ready = true);
+    markRead.bind(this);
 
-    kdb.load(this, () => kdb.writeLoop(getStore));
+    kdb.load(this, () => {
+      kdb.writeLoop(getStore);
+      markRead();
+    });
   }
 
   private connectMaster() {
@@ -122,7 +137,7 @@ export default class DBStore {
 
       if (!loadedFile && contents) {
         fs.writeFileSync(file, contents);
-        this.data["default"] = loadRDB(file);
+        // this.data["default"] = loadRDB(file);
         fs.unlinkSync(file);
         loadedFile = true;
       }
@@ -136,8 +151,7 @@ export default class DBStore {
 
         const func = commands[command];
         if (func) {
-          func(kserver, params, this, data);
-          console.log("txt:", txt);
+          func(kserver, params, this);
           this.offset += getBytes(txt);
         }
       }
@@ -172,7 +186,7 @@ export default class DBStore {
     type: BaseDBItem["type"] = "string",
     id?: string,
     collection: string = "default"
-  ) {
+  ): true | string {
     const expiration: Date | undefined = px
       ? new Date(Date.now() + px)
       : undefined;
@@ -186,15 +200,61 @@ export default class DBStore {
       id: id || crypto.randomUUID(),
     };
 
-    this.data[collection][key] = item;
+    if (collection === "default") {
+      this.data[collection].set(key, item);
+      this.addSetCommand(key, value, collection);
+      this.realtime.push(
+        collection,
+        key,
+        "SET",
+        Parser.commandString(key, value, collection)
+      );
+
+      return true;
+    }
+
+    if (!this.collectionsIds.includes(collection)) {
+      const err = `collection ${collection} not found`;
+      logger.error(err);
+      return err;
+    }
+
+    const isValid = this.validateSet(collection, value);
+
+    if (!isValid) {
+      const err = `invalid value for collection ${collection}`;
+      logger.error(err);
+      return err;
+    }
+
+    if (!this.data[collection]) {
+      this.data[collection] = new Map();
+    }
+
+    this.data[collection].set(key, item);
     this.addSetCommand(key, value, collection);
+    this.realtime.push(
+      collection,
+      key,
+      "SET",
+      Parser.commandString(key, value, collection)
+    );
+
+    return true;
   }
 
-  addSetCommand(
-    key: string,
-    value: string,
-    collection: string = "default"
-  ) {
+  validateSet(collection: string, data: string): boolean {
+    const validator = this.collectionsValidators.get(collection);
+
+    if (!validator) {
+      logger.error(`collection ${collection} not found`);
+      return false;
+    }
+
+    return validator.validate(data);
+  }
+
+  addSetCommand(key: string, value: string, collection: string = "default") {
     const command = Parser.commandString(key, value, collection);
     this.commandsLookup.set(command.split("<-KC->")[0], command);
   }
@@ -203,16 +263,12 @@ export default class DBStore {
     const commandKey = Parser.commandKey(key, collection);
     const exist = this.commandsLookup.get(commandKey);
 
-    if (exist) return;
-
-    const keyExist = this.commandsKeys.indexOf(commandKey);
-
-    if (keyExist === -1) {
+    if (!exist) {
       logger.error(`set command doesn't exist: ${commandKey}`);
       return;
     }
 
-    const parsed = Parser.readCommandString(this.commands[keyExist]);
+    const parsed = Parser.readCommandString(exist);
     if (!parsed) return;
 
     this.set(
@@ -230,7 +286,7 @@ export default class DBStore {
     collection: string = "default",
     turn: boolean = false
   ): null | DBItem {
-    const data = this.data[collection][key];
+    const data = this.data?.[collection]?.get?.(key);
     if (!data && turn) return null;
 
     if (!data) {
@@ -250,8 +306,14 @@ export default class DBStore {
   }
 
   delete(key: string, collection: string = "default") {
-    delete this.data[collection][key];
+    this.data[collection].delete(key);
     this.commandsLookup.delete(key);
+    this.realtime.push(
+      collection,
+      key,
+      "DEL",
+      Parser.commandString(key, Parser.nilResponse(), collection)
+    );
   }
 
   exists(
@@ -259,7 +321,7 @@ export default class DBStore {
     collection: string = "default",
     turn: boolean = false
   ): boolean {
-    const exist = this.data[collection][key];
+    const exist = this.data[collection]?.get?.(key);
 
     if (!exist && turn) return false;
 
@@ -302,7 +364,7 @@ export default class DBStore {
     value: Record<string, BaseDBItem>,
     type: StreamDBItem["type"] = "stream"
   ) {
-    const existItem = this.data["default"][key] as StreamDBItem | undefined;
+    const existItem = this.data["default"].get(key) as StreamDBItem | undefined;
     const entries: StreamDBItem["entries"] = [];
     const keyValue: [string, string | number][] = [];
 
@@ -317,7 +379,7 @@ export default class DBStore {
         entries.push([value[element].id, keyValue]);
       });
 
-      this.data["default"][key] = existItem;
+      this.data["default"].set(key, existItem);
       this.executeListeners(key, { ...existItem, entries: entries });
 
       return;
@@ -335,7 +397,7 @@ export default class DBStore {
       entries,
     };
 
-    this.data["default"][key] = item;
+    this.data["default"].set(key, item);
     this.executeListeners(key, item);
   }
 
@@ -384,7 +446,7 @@ export default class DBStore {
   }
 
   getStream(key: string) {
-    return this.data["default"][key] as StreamDBItem | undefined;
+    return this.data["default"].get(key) as StreamDBItem | undefined;
   }
 
   keys(regexString: string, collection: string = "default") {
@@ -396,5 +458,25 @@ export default class DBStore {
 
     const regex = new RegExp(regexString);
     return keys.filter((key) => regex.test(key));
+  }
+
+  async isReady() {
+    if (this.ready) return true;
+
+    while (!this.ready) {
+      await sleep(10);
+    }
+
+    return true;
+  }
+
+  // realtime
+
+  subscribe(ws: ServerWebSocket<any>, collection: string, key: string) {
+    this.realtime.subscribe(ws, collection, key);
+  }
+
+  unsubscribe(ws: ServerWebSocket<any>, collection: string, key: string) {
+    this.realtime.unsubscribe(ws, collection, key);
   }
 }

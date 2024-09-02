@@ -23,6 +23,9 @@ function validateConfig(args: Record<string, string>) {
   let dir = args["dir"] || defaultConfig.dir;
   let dbfilename = args["dbfilename"] || defaultConfig.dbfilename;
   const port = parseInt(args["port"] || String(defaultConfig.port));
+  const realtimeport = parseInt(
+    args["realtimeport"] || String(defaultConfig.realtimeport)
+  );
   const replicaof = args["replicaof"] || defaultConfig.replicaof;
   const saveperiod = parseInt(
     args["saveperiod"] || String(defaultConfig.saveperiod || "3600000")
@@ -45,6 +48,7 @@ function validateConfig(args: Record<string, string>) {
     replicaof,
     saveperiod,
     collections,
+    realtimeport,
   };
 }
 

@@ -20,6 +20,8 @@ const kdb = new KDB(
   config.saveperiod
 );
 
+let storeReady = false;
+
 const store = new DBStore({
   role: config.replicaof ? "slave" : "master",
   port: config.port,
@@ -31,11 +33,11 @@ const store = new DBStore({
   kdb,
 });
 
-const runBenchmark = async (kserver: KServer, body: Buffer) => {
+const runBenchmark = async () => {
   const suite = new Benchmark.Suite();
+  await store.isReady();
 
   logger.info("running benchmark");
-  const parsed = Parser.parse(body)!;
   store.set("foo", "bar");
   store.set("num", "1");
 
@@ -51,8 +53,23 @@ const runBenchmark = async (kserver: KServer, body: Buffer) => {
     store.set(`foo-${now}`, "bar");
   });
 
+  suite.add("KSET", () => {
+    store.set(
+      "jhon",
+      Parser.toKDBJson({ "first-name": "Jhon", "last-name": "Doe", age: 25 }),
+      undefined,
+      "string",
+      undefined,
+      "people"
+    );
+  });
+
   suite.add("GET", () => {
     store.get("foo");
+  });
+
+  suite.add("KGET", () => {
+    store.get("jhon", "people");
   });
 
   suite.add("DEL", () => {
@@ -126,6 +143,48 @@ const runReadBenchmark = async (kserver: KServer, body: Buffer) => {
   await suite.run({ async: true });
 };
 
+Bun.serve({
+  port: config.realtimeport,
+  fetch(req, server) {
+    if (server.upgrade(req)) {
+      return;
+    }
+
+    return new Response("Upgrade failed", { status: 500 });
+  },
+
+  websocket: {
+    message(ws, msg) {
+
+      const content = typeof msg === "string" ? msg : msg.toString();
+      const json = JSON.parse(content);
+
+      if (json.type === "subscribe") {
+        store.subscribe(ws, json.collection, json.key);
+        logger.info(`subscribed to ${json.collection}:${json.key}`);
+        ws.send(`${json.id}: ${Parser.okResponse()}`);
+        return;
+      }
+
+      if (json.type === "unsubscribe") {
+        store.unsubscribe(ws, json.collection, json.key);
+        ws.send(`${json.id}: ${Parser.okResponse()}`);
+        return;
+      }
+
+      ws.send(`${json.id}: ${Parser.nilResponse()}`);
+    },
+    open(ws) {
+      store.realtime.add(ws);
+      logger.info(`realtime connection with ${ws.remoteAddress} opened`);
+    },
+    close(ws, code, reason) {
+      store.realtime.remove(ws);
+      logger.info(`realtime connection with ${ws.remoteAddress} closed`);
+    },
+  },
+});
+
 const httpserver = http.createServer((req, res) => {
   res.writeHead(200, { "Content-Type": "text/plain" });
   res.setHeader("Content-Type", "text/event-stream");
@@ -140,6 +199,11 @@ const httpserver = http.createServer((req, res) => {
 
   req.on("end", async () => {
     try {
+      if (!storeReady) {
+        await store.isReady();
+        storeReady = true;
+      }
+
       const kserver = buildKServer(res, store);
       const e = await execute(kserver, body, store);
 
@@ -150,7 +214,6 @@ const httpserver = http.createServer((req, res) => {
       }
 
       // processBatch(0);
-      // await runBenchmark(kserver, body);
 
       res.end();
     } catch (err) {
@@ -180,3 +243,4 @@ const httpserver = http.createServer((req, res) => {
 
 // server.listen(config.port, "127.0.0.1");
 httpserver.listen(config.port);
+// runBenchmark();

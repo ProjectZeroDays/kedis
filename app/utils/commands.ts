@@ -8,7 +8,6 @@ type CommandFunc = (
   c: KServer,
   params: [number, string][],
   store: DBStore,
-  raw: Buffer
 ) => void;
 
 const EMPTY_RDB = Buffer.from(
@@ -56,7 +55,6 @@ class Commands {
     c: KServer,
     args: [number, string][],
     store: DBStore,
-    raw: Buffer
   ) {
     const [key, value] = [args[0][1], args[1][1]];
     let px: number | undefined = undefined;
@@ -122,7 +120,6 @@ class Commands {
     c: KServer,
     args: [number, string][],
     store: DBStore,
-    raw: Buffer
   ) {
     const key = args[0][1];
     store.delete(key);
@@ -211,7 +208,7 @@ class Commands {
       neededRepls = store.replicas.length;
     }
 
-    let timeoutHandler: NodeJS.Timeout;
+    let timeoutHandler: Timer;
     let passed: boolean = false;
     const acks = [];
     const listener = (data: Buffer) => {
@@ -480,6 +477,33 @@ class Commands {
     c.queue.discard();
     c.write(Parser.okResponse());
   }
+
+  // ---- KEDIS COMMANDS
+  static KADD(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const key = args[1][1];
+    const data = args[2][1];
+
+    const res = store.set(key, data, undefined, "string", undefined, collection);
+
+    if (res === true) return c.queueWrite(c, Parser.okResponse());
+
+    c.queueWrite(c, Parser.errorResponse(res))
+  }
+
+  static KGET(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const key = args[1][1];
+
+    const value = store.get(key, collection) as BaseDBItem | null;
+
+    if (!value) {
+      c.queueWrite(c, Parser.nilResponse());
+      return;
+    }
+
+    c.queueWrite(c, Parser.dynamicResponse(value.value));
+  }
 }
 
 export const commands: Record<Command, CommandFunc> = {
@@ -502,4 +526,6 @@ export const commands: Record<Command, CommandFunc> = {
   MULTI: Commands.MULTI,
   EXEC: Commands.EXEC,
   DISCARD: Commands.DISCARD,
+  KADD: Commands.KADD,
+  KGET: Commands.KGET,
 };

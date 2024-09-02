@@ -17,7 +17,9 @@ type Command =
   | "INCR"
   | "MULTI"
   | "EXEC"
-  | "DISCARD";
+  | "DISCARD"
+  | "KADD"
+  | "KGET";
 
 type KCommand = "KCADD" | "KCDEL" | "KADD" | "KDEL";
 
@@ -70,12 +72,27 @@ interface Collection {
   index?: boolean | string[];
 }
 
+interface RealtimeMsg {
+  type: "subscribe" | "unsubscribe";
+  collection: string;
+  key: string;
+  id: string;
+}
+
 interface Config {
   collections?: Collection[];
   collectionsJsonFile?: string;
   port: number;
+  realtimeport: number;
   dir: string;
   dbfilename: string;
   replicaof?: string;
   saveperiod?: number;
+  vector?: {
+    set: (collection: string, key: string, text: string) => Promise<number[]>;
+    get: (collection: string, key: string) => Promise<number[]>;
+    delete: (collection: string, key: string) => Promise<void>;
+    query: (collection: string, text: string) => Promise<string[]>;
+    generateEmbedding: (text: string) => Promise<number[]>;
+  }
 }

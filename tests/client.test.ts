@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import Validator from "../app/utils/validator";
 import Parser from "../app/utils/parser";
 import Benchmark from "benchmark";
 import http from "node:http";
