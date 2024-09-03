@@ -3339,7 +3339,7 @@ ${collectionsJson}--KDB-COLLECTIONS-END--\r
 
 // app/main.ts
 var import_path2 = __toESM(require("path"), 1);
-var import_ws = __toESM(require("ws"), 1);
+var import_ws = require("ws");
 var config2 = readConfig();
 logger_default.info("kdb-path: " + import_path2.default.join(config2.dir, config2.dbfilename));
 logger_default.info("kedis-port: " + config2.port);
@@ -3357,7 +3357,7 @@ var store = new DBStore({
   colllections: [],
   kdb
 });
-var realtimeServer = new import_ws.default.Server({ port: config2.realtimeport });
+var realtimeServer = new import_ws.WebSocketServer({ port: config2.realtimeport });
 realtimeServer.on("connection", (ws) => {
   store.realtime.add(ws);
   ws.on("close", () => {
@@ -3382,10 +3382,6 @@ realtimeServer.on("connection", (ws) => {
   });
 });
 var httpserver = import_node_http.default.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
   const headers = req.headers;
   let body = Buffer.alloc(0);
   req.on("data", (chunk) => {
@@ -3397,6 +3393,10 @@ var httpserver = import_node_http.default.createServer((req, res) => {
         await store.isReady();
         storeReady = true;
       }
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.writeHead(200, { "Content-Type": "text/plain" });
       const kserver = buildKServer(res, store);
       const e = await execute_command_default(kserver, body, store, auth, headers);
       if (!e) {

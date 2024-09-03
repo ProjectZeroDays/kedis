@@ -9,7 +9,7 @@ import Benchmark from "benchmark";
 import KDB from "./utils/kdb";
 import path from "path";
 import Auth from "./utils/auth";
-import { Server } from "ws";
+import { WebSocketServer } from "ws";
 
 const config = readConfig();
 
@@ -94,70 +94,7 @@ const runBenchmark = async () => {
   await suite.run({ async: true });
 };
 
-// const totalItems = 1000000;
-// const batchSize = 10000;
-
-// function processBatch(startIndex: number) {
-//   for (
-//     let i = startIndex;
-//     i < Math.min(startIndex + batchSize, totalItems);
-//     i++
-//   ) {
-//     const now = Date.now() + Math.random() * Math.random();
-//     store.set(`foo-${now}`, Parser.toKDBJson({ bar: `bar-${now}` }));
-//   }
-
-//   if (startIndex + batchSize < totalItems) {
-//     setImmediate(() => processBatch(startIndex + batchSize));
-//   } else {
-//     console.log("Processing complete");
-//   }
-// }
-
-// Bun.serve({
-//   port: config.realtimeport,
-//   fetch(req, server) {
-//     if (server.upgrade(req)) {
-//       return;
-//     }
-
-//     return new Response("Upgrade failed", { status: 500 });
-//   },
-
-//   websocket: {
-//     message(ws, msg) {
-//       const content = typeof msg === "string" ? msg : msg.toString();
-//       const json = JSON.parse(content);
-
-//       if (json.type?.toLowerCase?.() === "subscribe") {
-//         store.subscribe(ws, json.collection, json.key);
-//         logger.info(`subscribed to ${json.collection}:${json.key}`);
-//         ws.send(`${json.id}: ${Parser.okResponse()}`);
-//         return;
-//       }
-
-//       if (json.type?.toLowerCase?.() === "unsubscribe") {
-//         store.unsubscribe(ws, json.collection, json.key);
-//         ws.send(`${json.id}: ${Parser.okResponse()}`);
-//         return;
-//       }
-
-//       ws.send(`${json.id}: ${Parser.nilResponse()}`);
-//     },
-//     open(ws) {
-//       store.realtime.add(ws);
-//     },
-//     close(ws) {
-//       store.realtime.remove(ws);
-//     },
-//   },
-
-//   error(err) {
-//     return new Response(Parser.errorResponse(`error: ${err.message}`));
-//   },
-// });
-
-const realtimeServer = new Server({ port: config.realtimeport });
+const realtimeServer = new WebSocketServer({ port: config.realtimeport });
 
 realtimeServer.on("connection", (ws) => {
   store.realtime.add(ws);
@@ -188,11 +125,6 @@ realtimeServer.on("connection", (ws) => {
 });
 
 const httpserver = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-
   const headers = req.headers;
   let body = Buffer.alloc(0);
 
@@ -206,6 +138,11 @@ const httpserver = http.createServer((req, res) => {
         await store.isReady();
         storeReady = true;
       }
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.writeHead(200, { "Content-Type": "text/plain" });    
 
       const kserver = buildKServer(res, store);
       const e = await execute(kserver, body, store, auth, headers);
