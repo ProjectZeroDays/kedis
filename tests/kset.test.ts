@@ -20,21 +20,37 @@ describe("Server-Client", () => {
     const ping = await sendRequest(Parser.listResponse(["PING"]));
     expect(ping).toBe("+PONG\r\n");
 
-    for (let i = 0; i < 500; i++) {
-      const now = Date.now();
-      await sendRequest(
-        Parser.listResponse([
-          "KSET",
-          "people",
-          "jhon",
-          Parser.toKDBJson({
-            "first-name": `John-${now}`,
-            "last-name": "Doe",
-            age: 31,
-          }),
-        ])
-      );
-    }
+    const kcset = await sendRequest(
+      Parser.listResponse([
+        "KCSET",
+        "people",
+        Parser.toKDBJson({
+          schema: [
+            { key: "first-name", type: "string", required: true },
+            { key: "last-name", type: "string", required: true },
+            { key: "age", type: "number", required: true, min: 18, max: 100 },
+          ]
+        }),
+      ])
+    );
+
+    console.log(kcset);
+
+    // for (let i = 0; i < 500; i++) {
+    //   const now = Date.now();
+    //   await sendRequest(
+    //     Parser.listResponse([
+    //       "KSET",
+    //       "people",
+    //       "jhon",
+    //       Parser.toKDBJson({
+    //         "first-name": `John-${now}`,
+    //         "last-name": "Doe",
+    //         age: 31,
+    //       }),
+    //     ])
+    //   );
+    // }
 
     const kadd = await sendRequest(
       Parser.listResponse([

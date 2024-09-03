@@ -3,18 +3,13 @@ import { Config } from "./app/types/config";
 const config: Config = {
   port: 8080,
   realtimeport: 9090,
-  dbfilename: "test3.kdb",
-  dir: "/home/user/kedis/data",
+  dbfilename: "data.kdb",
+  dir: "/tmp/",
   saveperiod: 10000,
   auth: [
     [
       ["KCSET"],
-      (headers) => {
-        const token = headers.authorization;
-        if (!token) return false;
-
-        return true;
-      }
+      (headers) => true
     ]
   ]
 };

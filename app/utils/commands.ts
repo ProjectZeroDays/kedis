@@ -515,7 +515,7 @@ class Commands {
     const payload = args[1][1];
 
     const parsed = Parser.readKDBJson(payload);
-    if (!parsed || !Array.isArray(parsed.schema)) {
+    if (!parsed || typeof parsed.schema !== "object") {
       return c.queueWrite(
         c,
         Parser.errorResponse("Invalid collection payload")

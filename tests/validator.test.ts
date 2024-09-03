@@ -9,6 +9,7 @@ describe("Validator", () => {
 
     const collection: Collection = {
       id: "test",
+      version: 0,
       schema: [
         { key: "name", type: "string", required: true },
         { key: "age", type: "number", required: false, min: 18, max: 99 },
