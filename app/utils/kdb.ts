@@ -37,11 +37,9 @@ export default class KDB {
       const content = file.toString();
       logger.info(`loaded kdb file to memory`);
 
-      const [info, data, collections] = await Promise.all([
-        this.grapInfo(content),
-        this.grapData(content),
-        this.grapCollections(content),
-      ]);
+      const info = this.grapInfo(content);
+      const data = this.grapData(content);
+      const collections = this.grapCollections(content);
 
       for (const key in info) {
         logger.info(`[snapshot-info] ${key}: ${info[key as keyof KDBInfoData]}`);
@@ -56,10 +54,18 @@ export default class KDB {
 
       logger.info("loading commands lookup table... (this may take a while)");
       let now = Date.now();
-      store.commandsLookup = new Map(
-        data.map((d) => [d.split("<-KC->")[0], d])
-      );
+      const commandsLookup: [string, string][] = [];
 
+      const func = (key: string, value: string) => {
+        commandsLookup.push([key, value]);
+      }
+
+      for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        commandsLookup.push([d.split("<-KC->")[0], d]);
+      }
+
+      store.commandsLookup = new Map(commandsLookup);
       logger.info(`loaded snapshot from ${this.path} in ${Date.now() - now}ms`);
 
       onFinish?.();
@@ -76,7 +82,7 @@ export default class KDB {
     }
   }
 
-  async grapInfo(content: string) {
+  grapInfo(content: string) {
     const start =
       content.indexOf("--KDB-INFO-START--\r\n") +
       "--KDB-INFO-START--\r\n".length;
@@ -87,7 +93,7 @@ export default class KDB {
     return json;
   }
 
-  async grapData(content: string) {
+  grapData(content: string) {
     const start =
       content.indexOf("--KDB-DATA-START--\r\n") +
       "--KDB-DATA-START--\r\n".length;
@@ -98,7 +104,7 @@ export default class KDB {
     return d;
   }
 
-  async grapCollections(content: string) {
+  grapCollections(content: string) {
     const start =
       content.indexOf("--KDB-COLLECTIONS-START--\r\n") +
       "--KDB-COLLECTIONS-START--\r\n".length;
