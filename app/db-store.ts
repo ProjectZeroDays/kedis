@@ -17,6 +17,7 @@ import Validator from "./utils/validator";
 import RealtimePool from "./utils/realtime";
 import sleep from "./utils/sleep";
 import WebSocket from "ws";
+import Vector from "./utils/vector";
 
 type ServerWebSocket<T> = WebSocket;
 
@@ -57,6 +58,7 @@ export default class DBStore {
   ready: boolean = false;
 
   realtime: RealtimePool;
+  vector: Vector;
 
   constructor({
     role,
@@ -73,7 +75,10 @@ export default class DBStore {
     this.dbfilename = dbfilename;
     this.port = port;
     this.collections = colllections;
+
     this.realtime = new RealtimePool();
+    this.vector = new Vector();
+
     this.collectionsIds = colllections.map((c) => c.id);
     this.collectionsValidators = new Map(
       colllections.map((c) => [c.id, new Validator(c)])
@@ -222,7 +227,7 @@ export default class DBStore {
       return err;
     }
 
-    const isValid = this.validateSet(collection, value);
+    const isValid = this.validateSet(collection, key, value);
 
     if (!isValid) {
       const err = `invalid value for collection ${collection}`;
@@ -246,7 +251,7 @@ export default class DBStore {
     return true;
   }
 
-  validateSet(collection: string, data: string): boolean {
+  validateSet(collection: string, key: string, data: string): boolean {
     const validator = this.collectionsValidators.get(collection);
 
     if (!validator) {
@@ -254,7 +259,11 @@ export default class DBStore {
       return false;
     }
 
-    return validator.validate(data);
+    const is = validator.validate(data);
+
+    if (is) this.vectorSet(collection, key, Parser.readKDBJson(data) || {});
+
+    return is;
   }
 
   addSetCommand(key: string, value: string, collection: string = "default") {
@@ -520,5 +529,84 @@ export default class DBStore {
 
   resetCollection(id: string) {
     this.data[id] = new Map();
+  }
+
+  // vector stuff
+
+  async vectorSet(
+    collection: string,
+    key: string,
+    data: any
+  ): Promise<boolean> {
+    const dataToVector: string[] = [];
+    const collectionIndex = this.collectionsIds.indexOf(collection);
+    const collectionSchema = this.collections[collectionIndex].schema;
+
+    for (const s of collectionSchema) {
+      if (!s.vector) continue;
+
+      dataToVector.push(`${s.key}: ${String(data[s.key])}`);
+    }
+
+    if (dataToVector.length < 1) return true;
+
+    const res = await this.vector.set({
+      collection,
+      key,
+      text: dataToVector.join("\n"),
+    });
+
+    return res;
+  }
+
+  async vectorDelete(collection: string, key: string): Promise<boolean> {
+    const res = await this.vector.delete(collection, key);
+    return res;
+  }
+
+  async vectorQuery(
+    collection: string,
+    text: string,
+    n: number = 5
+  ): Promise<string[]> {
+    const res = await this.vector.query(collection, text, n);
+    return res;
+  }
+
+  async vectorSimilar(collection: string, key: string, compare: string[], n?: number) {
+    const collectionIndex = this.collectionsIds.indexOf(collection);
+    const collectionSchema = this.collections[collectionIndex].schema;
+
+    const item = this.get(key, collection) as BaseDBItem | undefined;
+    if (!item) return [];
+
+    const parsedItem = Parser.readKDBJson(String(item.value));
+    if (!parsedItem) return [];
+
+    if (compare.length < 1) {
+      compare = collectionSchema.map((c) => c.key);
+    }
+
+    const dataToQuery: string[] = [];
+    for (const s of collectionSchema) {
+      if (!compare.includes(s.key) || !parsedItem[s.key]) continue;
+      dataToQuery.push(`${s.key}: ${String(parsedItem[s.key])}`);
+    }
+
+    if (dataToQuery.length < 1) return [];
+
+    const ids = await this.vector.query(collection, dataToQuery.join("\n"), n);
+    if (ids.length < 1) return [];
+
+    const values: string[] = [];
+
+    for (const id of ids) {
+      const item = this.get(id, collection) as BaseDBItem | undefined;
+      if (!item) continue;
+
+      values.push(String(item.value));
+    }
+
+    return values;
   }
 }

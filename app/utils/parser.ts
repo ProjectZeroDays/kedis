@@ -93,6 +93,8 @@ export default class Parser {
     KDEL: Parser.parseTypeB,
     KCSET: Parser.parseTypeB,
     KCDEL: Parser.parseTypeB,
+    KSEARCH: Parser.parseTypeB,
+    KSIMILAR: Parser.parseTypeB
   };
 
   static getArgs(data: string | Buffer) {
@@ -293,7 +295,9 @@ export default class Parser {
     let tempLength = 0;
     let lastUnique: false | string = false;
 
-    for (const p of params) {
+    for (let i = 0; i < params.length; i++) {
+      const p = params[i];
+
       if (p.startsWith("$") && lastUnique) continue;
 
       if (p.startsWith("$") && !lastUnique) {
@@ -325,7 +329,9 @@ export default class Parser {
   }
 
   static parseTypeB(params: string[], slicedParams: [number, string][]) {
-    for (const p of params) {
+    for (let i = 0; i < params.length; i++) {
+      const p = params[i];
+
       if (!p.startsWith("$")) {
         slicedParams.push([0, p]);
       }

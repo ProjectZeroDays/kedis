@@ -2109,7 +2109,7 @@ var Commands = class _Commands {
     const collection = args[0][1];
     const payload = args[1][1];
     const parsed = Parser.readKDBJson(payload);
-    if (!parsed || !Array.isArray(parsed.schema)) {
+    if (!parsed || typeof parsed.schema !== "object") {
       return c.queueWrite(
         c,
         Parser.errorResponse("Invalid collection payload")
@@ -2547,17 +2547,13 @@ var execute_command_default = execute;
 var config = {
   port: 8080,
   realtimeport: 9090,
-  dbfilename: "test3.kdb",
-  dir: "/home/user/kedis/data",
-  saveperiod: 1e4,
+  dbfilename: "data.kdb",
+  dir: "/tmp/",
+  saveperiod: 1e5,
   auth: [
     [
       ["KCSET"],
-      (headers) => {
-        const token = headers.authorization;
-        if (!token) return false;
-        return true;
-      }
+      (headers) => true
     ]
   ]
 };
@@ -3194,11 +3190,9 @@ var KDB = class {
       const file = import_fs3.default.readFileSync(this.path);
       const content = file.toString();
       logger_default.info(`loaded kdb file to memory`);
-      const [info, data, collections] = await Promise.all([
-        this.grapInfo(content),
-        this.grapData(content),
-        this.grapCollections(content)
-      ]);
+      const info = this.grapInfo(content);
+      const data = this.grapData(content);
+      const collections = this.grapCollections(content);
       for (const key in info) {
         logger_default.info(`[snapshot-info] ${key}: ${info[key]}`);
       }
@@ -3210,9 +3204,15 @@ var KDB = class {
       );
       logger_default.info("loading commands lookup table... (this may take a while)");
       let now = Date.now();
-      store2.commandsLookup = new Map(
-        data.map((d) => [d.split("<-KC->")[0], d])
-      );
+      const commandsLookup = [];
+      const func = (key, value) => {
+        commandsLookup.push([key, value]);
+      };
+      for (let i = 0; i < data.length; i++) {
+        const d = data[i];
+        commandsLookup.push([d.split("<-KC->")[0], d]);
+      }
+      store2.commandsLookup = new Map(commandsLookup);
       logger_default.info(`loaded snapshot from ${this.path} in ${Date.now() - now}ms`);
       onFinish == null ? void 0 : onFinish();
     } catch (err) {
@@ -3227,21 +3227,21 @@ var KDB = class {
       this.loading = false;
     }
   }
-  async grapInfo(content) {
+  grapInfo(content) {
     const start = content.indexOf("--KDB-INFO-START--\r\n") + "--KDB-INFO-START--\r\n".length;
     const end = content.indexOf("--KDB-INFO-END--\r\n");
     const info = content.slice(start, end);
     const json = Parser.readKDBJson(info);
     return json;
   }
-  async grapData(content) {
+  grapData(content) {
     const start = content.indexOf("--KDB-DATA-START--\r\n") + "--KDB-DATA-START--\r\n".length;
     const end = content.indexOf("--KDB-DATA-END--");
     const data = content.slice(start, end);
     const d = data.split("<-KCOMMAND->");
     return d;
   }
-  async grapCollections(content) {
+  grapCollections(content) {
     const start = content.indexOf("--KDB-COLLECTIONS-START--\r\n") + "--KDB-COLLECTIONS-START--\r\n".length;
     const end = content.indexOf("--KDB-COLLECTIONS-END--");
     const data = content.slice(start, end);

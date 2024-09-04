@@ -13,11 +13,9 @@ export interface Config {
   replicaof?: string;
   saveperiod?: number;
   vector?: {
-    set: (collection: string, key: string, text: string) => Promise<number[]>;
-    get: (collection: string, key: string) => Promise<number[]>;
-    delete: (collection: string, key: string) => Promise<void>;
-    query: (collection: string, text: string) => Promise<string[]>;
-    generateEmbedding: (text: string) => Promise<number[]>;
+    set: (args: {collection: string, key: string, text: string}) => Promise<boolean>;
+    delete: (collection: string, key: string) => Promise<boolean>;
+    query: (collection: string, text: string, results: number) => Promise<string[]>;
   };
   auth?: [Array<Command | RealtimeCommand>, AuthFunc][];
 }

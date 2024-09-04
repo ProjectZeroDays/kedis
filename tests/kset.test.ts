@@ -28,11 +28,20 @@ describe("Server-Client", () => {
           schema: [
             { key: "first-name", type: "string", required: true },
             { key: "last-name", type: "string", required: true },
-            { key: "age", type: "number", required: true, min: 18, max: 100 },
-          ]
+            {
+              key: "age",
+              type: "number",
+              required: true,
+              min: 18,
+              max: 100,
+              vector: true,
+            },
+          ],
         }),
       ])
     );
+
+    await sendRequest(Parser.listResponse(["KSEARCH", "people", "7", "hello"]));
 
     console.log(kcset);
 
@@ -67,10 +76,20 @@ describe("Server-Client", () => {
 
     expect(kadd).toBe(Parser.okResponse());
 
+    await sendRequest(
+      Parser.listResponse([
+        "KSIMILAR",
+        "people",
+        "7",
+        "jhon",
+        Parser.toKDBJson(["first-name", "last-name"]),
+      ])
+    );
+
     const get = await sendRequest(
       Parser.listResponse(["KGET", "people", "jhon"])
     );
-  
+
     console.log(get);
     const getParsed = Parser.readKDBJson(get);
     expect(getParsed).toEqual({
@@ -80,11 +99,16 @@ describe("Server-Client", () => {
     });
 
     const invalidKadd = await sendRequest(
-      Parser.listResponse(["KSET", "people", "marry", Parser.toKDBJson({
-        "first-name": "Marry",
-        "last-name": "Ma",
-        age: 101,
-      })])
+      Parser.listResponse([
+        "KSET",
+        "people",
+        "marry",
+        Parser.toKDBJson({
+          "first-name": "Marry",
+          "last-name": "Ma",
+          age: 101,
+        }),
+      ])
     );
 
     expect(invalidKadd.substring(0, 1)).toBe("-");

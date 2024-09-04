@@ -526,7 +526,7 @@ class Commands {
       id: collection,
       version: 0,
       schema: parsed.schema,
-      index: parsed.index || []
+      index: parsed.index || [],
     });
 
     c.queueWrite(c, Parser.okResponse());
@@ -537,6 +537,35 @@ class Commands {
 
     store.deleteCollection(collection);
     c.queueWrite(c, Parser.okResponse());
+  }
+
+  static async KSEARCH(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const n = args[1][1];
+    const query = args[2][1];
+
+    const res = await store.vectorQuery(
+      collection,
+      query,
+      parseInt(n) || undefined
+    );
+    c.queueWrite(c, Parser.toKDBJson(res));
+  }
+
+  static async KSIMILAR(c: KServer, args: [number, string][], store: DBStore) {
+    const collection = args[0][1];
+    const n = args[1][1];
+    const key = args[2][1];
+    const compare = args[3][1];
+
+    const res = await store.vectorSimilar(
+      collection,
+      key,
+      Parser.readKDBJson(compare) || [],
+      parseInt(n) || undefined
+    );
+
+    c.queueWrite(c, Parser.toKDBJson(res));
   }
 }
 
@@ -565,4 +594,6 @@ export const commands: Record<Command, CommandFunc> = {
   KDEL: Commands.KDEL,
   KCSET: Commands.KCSET,
   KCDEL: Commands.KCDEL,
+  KSEARCH: Commands.KSEARCH,
+  KSIMILAR: Commands.KSIMILAR,
 };

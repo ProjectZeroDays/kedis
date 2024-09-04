@@ -22,7 +22,9 @@ type Command =
   | "KGET"
   | "KDEL"
   | "KCSET"
-  | "KCDEL";
+  | "KCDEL"
+  | "KSEARCH"
+  | "KSIMILAR";
 
 type RealtimeCommand = "SUBSCRIBE" | "UNSUBSCRIBE";
 
@@ -50,6 +52,7 @@ type DBItem = BaseDBItem | StreamDBItem;
 interface SchemaBaseItem {
   key: string;
   required: boolean;
+  vector?: boolean;
 }
 
 interface SchemaStringItem extends SchemaBaseItem {
