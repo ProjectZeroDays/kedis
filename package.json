@@ -12,7 +12,7 @@
     "ts-build": "tsup --dts-resolve",
     "package": "pkg . --out-path=build",
     "build": "bun run ts-build && bun run package",
-    "start": "node ./dist/main.cjs"
+    "start": "./build/kedix-linux"
   },
   "pkg": {
     "assets": [],
