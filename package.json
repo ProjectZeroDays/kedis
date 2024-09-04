@@ -11,7 +11,8 @@
     "test": "vitest --watch false --testTimeout 30000",
     "ts-build": "tsup --dts-resolve",
     "package": "pkg . --out-path=build",
-    "build": "bun run ts-build && bun run package"
+    "build": "bun run ts-build && bun run package",
+    "start": "node ./dist/main.cjs"
   },
   "pkg": {
     "assets": [],

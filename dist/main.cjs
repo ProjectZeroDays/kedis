@@ -2128,6 +2128,30 @@ var Commands = class _Commands {
     store2.deleteCollection(collection);
     c.queueWrite(c, Parser.okResponse());
   }
+  static async KSEARCH(c, args, store2) {
+    const collection = args[0][1];
+    const n = args[1][1];
+    const query = args[2][1];
+    const res = await store2.vectorQuery(
+      collection,
+      query,
+      parseInt(n) || void 0
+    );
+    c.queueWrite(c, Parser.toKDBJson(res));
+  }
+  static async KSIMILAR(c, args, store2) {
+    const collection = args[0][1];
+    const n = args[1][1];
+    const key = args[2][1];
+    const compare = args[3][1];
+    const res = await store2.vectorSimilar(
+      collection,
+      key,
+      Parser.readKDBJson(compare) || [],
+      parseInt(n) || void 0
+    );
+    c.queueWrite(c, Parser.toKDBJson(res));
+  }
 };
 var commands = {
   PING: Commands.PING,
@@ -2153,7 +2177,9 @@ var commands = {
   KGET: Commands.KGET,
   KDEL: Commands.KDEL,
   KCSET: Commands.KCSET,
-  KCDEL: Commands.KCDEL
+  KCDEL: Commands.KCDEL,
+  KSEARCH: Commands.KSEARCH,
+  KSIMILAR: Commands.KSIMILAR
 };
 
 // app/utils/parser.ts
@@ -2362,7 +2388,8 @@ ${contents}`;
   static parseTypeA(params, slicedParams) {
     let tempLength = 0;
     let lastUnique = false;
-    for (const p of params) {
+    for (let i = 0; i < params.length; i++) {
+      const p = params[i];
       if (p.startsWith("$") && lastUnique) continue;
       if (p.startsWith("$") && !lastUnique) {
         tempLength = _Parser.readNumber(p);
@@ -2386,7 +2413,8 @@ ${contents}`;
     }
   }
   static parseTypeB(params, slicedParams) {
-    for (const p of params) {
+    for (let i = 0; i < params.length; i++) {
+      const p = params[i];
       if (!p.startsWith("$")) {
         slicedParams.push([0, p]);
       }
@@ -2479,7 +2507,9 @@ _Parser.commandsParse = {
   KGET: _Parser.parseTypeB,
   KDEL: _Parser.parseTypeB,
   KCSET: _Parser.parseTypeB,
-  KCDEL: _Parser.parseTypeB
+  KCDEL: _Parser.parseTypeB,
+  KSEARCH: _Parser.parseTypeB,
+  KSIMILAR: _Parser.parseTypeB
 };
 var Parser = _Parser;
 
@@ -2543,22 +2573,6 @@ var execute = async (kserver, data, store2, auth2, headers) => {
 };
 var execute_command_default = execute;
 
-// kdb-config.ts
-var config = {
-  port: 8080,
-  realtimeport: 9090,
-  dbfilename: "data.kdb",
-  dir: "/tmp/",
-  saveperiod: 1e5,
-  auth: [
-    [
-      ["KCSET"],
-      (headers) => true
-    ]
-  ]
-};
-var kdb_config_default = config;
-
 // app/utils/logger.ts
 var import_winston = __toESM(require("winston"), 1);
 var logger = import_winston.default.createLogger({
@@ -2580,6 +2594,36 @@ var logger = import_winston.default.createLogger({
   ]
 });
 var logger_default = logger;
+
+// kdb-config.ts
+var config = {
+  port: 8080,
+  realtimeport: 9090,
+  dbfilename: "data.kdb",
+  dir: "/tmp/",
+  saveperiod: 9e5,
+  auth: [
+    [
+      ["KCSET"],
+      (headers) => true
+    ]
+  ],
+  vector: {
+    delete: async (collection, key) => {
+      logger_default.error(`vector not available for delete: ${collection}:${key}`);
+      return true;
+    },
+    set: async (args) => {
+      logger_default.error(`vector not available for set: ${args.collection}:${args.key}: ${args.text}`);
+      return true;
+    },
+    query: async (collection, key, n) => {
+      logger_default.error(`vector not available for query: ${collection}:${key}: ${n}`);
+      return [];
+    }
+  }
+};
+var kdb_config_default = config;
 
 // app/utils/auth.ts
 var Auth = class {
@@ -2773,6 +2817,37 @@ var RealtimePool = class {
   }
 };
 
+// app/utils/vector.ts
+var Vector = class {
+  constructor() {
+    this.vector = kdb_config_default.vector;
+  }
+  async set(args) {
+    if (!this.vector) {
+      logger_default.error("vector not configured");
+      return false;
+    }
+    const res = await this.vector.set(args);
+    return res;
+  }
+  async query(collection, text, n = 5) {
+    if (!this.vector) {
+      logger_default.error("vector not configured");
+      return [];
+    }
+    const res = await this.vector.query(collection, text, n);
+    return res;
+  }
+  async delete(collection, key) {
+    if (!this.vector) {
+      logger_default.error("vector not configured");
+      return false;
+    }
+    const res = await this.vector.delete(collection, key);
+    return res;
+  }
+};
+
 // app/db-store.ts
 var DBStore = class {
   constructor({
@@ -2801,6 +2876,7 @@ var DBStore = class {
     this.port = port;
     this.collections = colllections;
     this.realtime = new RealtimePool();
+    this.vector = new Vector();
     this.collectionsIds = colllections.map((c) => c.id);
     this.collectionsValidators = new Map(
       colllections.map((c) => [c.id, new Validator(c)])
@@ -2908,7 +2984,7 @@ var DBStore = class {
       logger_default.error(err);
       return err;
     }
-    const isValid = this.validateSet(collection, value);
+    const isValid = this.validateSet(collection, key, value);
     if (!isValid) {
       const err = `invalid value for collection ${collection}`;
       logger_default.error(err);
@@ -2927,13 +3003,15 @@ var DBStore = class {
     );
     return true;
   }
-  validateSet(collection, data) {
+  validateSet(collection, key, data) {
     const validator = this.collectionsValidators.get(collection);
     if (!validator) {
       logger_default.error(`collection ${collection} not found`);
       return false;
     }
-    return validator.validate(data);
+    const is = validator.validate(data);
+    if (is) this.vectorSet(collection, key, Parser.readKDBJson(data) || {});
+    return is;
   }
   addSetCommand(key, value, collection = "default") {
     const command = Parser.commandString(key, value, collection);
@@ -3123,6 +3201,57 @@ var DBStore = class {
   }
   resetCollection(id) {
     this.data[id] = /* @__PURE__ */ new Map();
+  }
+  // vector stuff
+  async vectorSet(collection, key, data) {
+    const dataToVector = [];
+    const collectionIndex = this.collectionsIds.indexOf(collection);
+    const collectionSchema = this.collections[collectionIndex].schema;
+    for (const s of collectionSchema) {
+      if (!s.vector) continue;
+      dataToVector.push(`${s.key}: ${String(data[s.key])}`);
+    }
+    if (dataToVector.length < 1) return true;
+    const res = await this.vector.set({
+      collection,
+      key,
+      text: dataToVector.join("\n")
+    });
+    return res;
+  }
+  async vectorDelete(collection, key) {
+    const res = await this.vector.delete(collection, key);
+    return res;
+  }
+  async vectorQuery(collection, text, n = 5) {
+    const res = await this.vector.query(collection, text, n);
+    return res;
+  }
+  async vectorSimilar(collection, key, compare, n) {
+    const collectionIndex = this.collectionsIds.indexOf(collection);
+    const collectionSchema = this.collections[collectionIndex].schema;
+    const item = this.get(key, collection);
+    if (!item) return [];
+    const parsedItem = Parser.readKDBJson(String(item.value));
+    if (!parsedItem) return [];
+    if (compare.length < 1) {
+      compare = collectionSchema.map((c) => c.key);
+    }
+    const dataToQuery = [];
+    for (const s of collectionSchema) {
+      if (!compare.includes(s.key) || !parsedItem[s.key]) continue;
+      dataToQuery.push(`${s.key}: ${String(parsedItem[s.key])}`);
+    }
+    if (dataToQuery.length < 1) return [];
+    const ids = await this.vector.query(collection, dataToQuery.join("\n"), n);
+    if (ids.length < 1) return [];
+    const values = [];
+    for (const id of ids) {
+      const item2 = this.get(id, collection);
+      if (!item2) continue;
+      values.push(String(item2.value));
+    }
+    return values;
   }
 };
 
