@@ -1,16 +1,68 @@
-name: We Take Zer0 Days Off 
+name: We Take Zer0 Days Off: Hack the Planet (Safely)
 
-on: [pull_request_target, issues]
+on: [pull_request, issues]
 
 jobs:
-  greeting:
+  secure-and-amuse:
     runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
+      contents: write
     steps:
-    - uses: actions/first-interaction@v1
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Scan for vulnerabilities
+      run: |
+        echo "Scanning for vulnerabilities... 🕵️‍♂️"
+        echo "Found 3 critical issues: XSS, SQL injection, and a bad joke about firewalls."
+
+    - name: Fix vulnerabilities
+      run: |
+        echo "Fixing vulnerabilities... 🛠️"
+        echo "XSS patched, SQL injection neutralized, and firewall joke improved."
+
+    - name: Approve and merge if Copilot agrees
+      run: |
+        echo "Asking Copilot for approval... 🤖"
+        echo "Copilot says: 'Beep boop, looks good to me!'"
+        echo "Merging changes faster than you can say 'hackerman'!"
+
+    - name: Deploy humor
+      uses: actions/github-script@v6
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Message that will be displayed on users' first issue"
-        pr-message: "Message that will be displayed on users' first pull request"
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const jokes = [
+            "Why did the hacker bring a ladder to the bank? To get over the firewall!",
+            "What do you call a hacker's favorite snack? Cyber-chips!",
+            "Why don't hackers ever get cold? They always have their firewalls up!",
+            "How does a hacker propose? With a token ring!",
+            "Why did the Hak5 Pineapple go to therapy? It had too many identity issues!",
+            "What's a hacker's favorite dance? The algorithm!",
+            "Why did the computer go to the doctor? It had a virus!",
+            "How do hackers keep warm? They use a LAN-ket!",
+            "Why did the hacker break up with their keyboard? They just weren't their type!",
+            "What do you call a promiscuous router? A hot spot!"
+          ];
+          
+          const randomJoke = jokes[Math.floor(Math.random() * jokes.length)];
+          const comment = `## Congrats on your Pull Request! 🎉\n\nYour code passed our rigorous security checks. As a reward, here's a hacker joke:\n\n${randomJoke}\n\nKeep hacking (ethically)! 👨‍💻👩‍💻`;
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.name,
+            body: comment
+          });
+
+    - name: Cycle more jokes
+      run: |
+        echo "Generating more jokes for future pull requests... 😂"
+        echo "Warning: Jokes may cause uncontrollable laughter and potential keyboard spills."
+
+    - name: Final security check
+      run: |
+        echo "Performing final security check... 🔒"
+        echo "All clear! Your code is now more secure than a USB condom on a public charging station."
